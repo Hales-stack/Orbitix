@@ -1,0 +1,1115 @@
+<title>Orbitix</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: left parts bin | 3D workspace with live requirements | right parts bin */
+:root{--bg:#0a0e16;--panel:#101725;--panel2:#151e30;--line:#222e47;--text:#e4ebf7;--muted:#8c9ab6;--accent:#5fd3c8;--accent-ink:#06211f;--warn:#f0b24a;--bad:#ef6a5e;--good:#62d48f;--f-disp:'Space Grotesk',system-ui,sans-serif;--f-body:'Inter',system-ui,sans-serif;--f-mono:'JetBrains Mono',ui-monospace,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+button,select{font:inherit;color:inherit}
+#app{height:100%;min-height:640px;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:baseline;gap:10px;font-family:var(--f-disp)}
+.brand b{font-size:22px;letter-spacing:.01em}.brand small{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.ctrl,.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+select{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;color:var(--text);max-width:200px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn:focus-visible,.card:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.layout{flex:1;min-height:0;display:grid;grid-template-columns:236px minmax(0,1fr) 236px;gap:12px}
+.bin{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0;min-width:0}
+.bin h2{margin:0;padding:12px 12px 4px;font:700 13px var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:auto;flex:1;min-height:0;align-content:start}
+.card{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:2px;cursor:grab;user-select:none;touch-action:none;min-width:0}
+.card:hover{border-color:var(--accent)}
+.card-i{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);background:rgba(10,14,22,.85);color:var(--accent);font:700 11px/1 var(--f-mono);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:2}
+.card-i:hover{background:var(--accent);color:#06131c;border-color:var(--accent)}
+.cmp-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.cmp-pick select{width:100%}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.cmp-col{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.cmp-col h3{margin:0 0 6px;font:700 15px var(--f-disp);color:var(--text)}
+.cmp-kv{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line);font:500 12.5px var(--f-mono)}
+.cmp-kv b.win{color:var(--good)}
+.cmp-list{list-style:none;padding:0;margin:6px 0 0;font-size:12.5px}
+.cmp-list li{padding:2px 0;color:#c5d0e6}.cmp-list li.pro::before{content:'✓ ';color:var(--good);font-weight:700}.cmp-list li.con::before{content:'✕ ';color:var(--bad);font-weight:700}
+.cosmo-guide{display:flex;align-items:center;gap:12px;background:rgba(19,30,54,.85);border:1px solid #35476e;border-radius:12px;padding:10px 12px;margin:8px 0 12px}
+.cosmo-av{width:54px;height:54px;flex:none;animation:cosmoBob 2.6s ease-in-out infinite}
+@keyframes cosmoBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.cosmo-msg{flex:1;min-width:0}
+.cosmo-msg b{display:block;font:700 11px var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.cosmo-msg p{margin:0;font-size:13px;line-height:1.45;color:#e4ebf7}
+.assist{margin:0 12px 6px;padding:7px 12px;border-radius:8px;background:rgba(19,30,54,.8);border:1px solid #2b3c63;font-size:12px;color:#d6e2f7;display:flex;align-items:center;gap:8px}
+.assist b{color:var(--accent);font:700 11px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;flex:none}
+.tabs{display:flex;gap:6px;margin:8px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;flex-wrap:wrap}
+.tab{background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:6px 12px;border-radius:7px;font:600 12.5px var(--f-disp);cursor:pointer}
+.tab.on{background:var(--accent);color:#06131c;border-color:var(--accent)}
+.orbit-wrap{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;align-items:start}
+.orbit-cv{width:100%;height:260px;border-radius:10px;border:1px solid var(--line);background:#050811;display:block}
+.orbit-ctrl label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
+.orbit-ctrl input[type=range]{width:100%;accent-color:var(--accent)}
+.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.subcard{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.subcard .sh{display:flex;justify-content:space-between;font:700 12px var(--f-disp);margin-bottom:4px}
+.quiz-q{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.quiz-opts{display:grid;gap:6px;margin-top:6px}
+.quiz-opt{text-align:left;background:rgba(10,14,22,.7);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12.5px}
+.quiz-opt:hover{border-color:var(--accent)}.quiz-opt.ok{border-color:var(--good);background:rgba(66,204,132,.15)}.quiz-opt.no{border-color:var(--bad);background:rgba(240,90,90,.15)}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ach{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;opacity:.55}.ach.on{opacity:1;border-color:var(--warn)}
+.cert{border:2px solid var(--warn);border-radius:12px;padding:18px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(244,184,68,.12),rgba(10,14,22,.9))}
+@media (max-width:640px){.orbit-wrap,.subgrid,.ach-grid{grid-template-columns:1fr}}
+@media (max-width:600px){.cmp-pick,.cmp-grid{grid-template-columns:1fr}}
+.card canvas{width:100%;aspect-ratio:1;display:block;pointer-events:none}
+.card b{font:600 12px var(--f-body)}.card span{font:400 10.5px var(--f-mono);color:var(--muted)}
+.info{border-top:1px solid var(--line);padding:10px 12px;font-size:12px;color:var(--muted);min-height:96px}
+.info b{color:var(--text);display:block;font-family:var(--f-disp);font-size:14px}
+.info i{font:normal 11px var(--f-mono);color:var(--accent);display:block;margin-top:4px}
+.stage{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
+.brief{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.brief h1{margin:0;font:700 16px var(--f-disp)}.brief p{margin:0;color:var(--muted);font-size:12.5px}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:6px}
+.chip{border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:var(--panel2);min-width:0}
+.chip small{display:block;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip em{font:normal 600 12px var(--f-mono);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip .bar{height:3px;background:var(--line);margin-top:4px;border-radius:2px;overflow:hidden}.chip .bar i{display:block;height:100%}
+.chip.ok em{color:var(--good)}.chip.ok .bar i{background:var(--good)}
+.chip.bad em{color:var(--bad)}.chip.bad .bar i{background:var(--bad)}
+.chip.idle em{color:var(--muted)}.chip.idle .bar i{background:var(--muted)}
+.cv{position:relative;flex:1;min-height:320px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 85%,#16233d 0%,#0b1120 60%,#070a12 100%)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hint{position:absolute;left:10px;right:10px;top:10px;font-size:12.5px;color:var(--text);background:rgba(10,14,22,.78);border:1px solid var(--line);border-radius:6px;padding:6px 10px;pointer-events:none}
+.sel{position:absolute;left:10px;bottom:10px;display:flex;gap:10px;align-items:center;background:rgba(10,14,22,.88);border:1px solid var(--accent);border-radius:6px;padding:6px 10px;font-size:12.5px}
+.toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--warn);color:var(--text);border-radius:6px;padding:6px 12px;font-size:12.5px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%}
+.toast.show{opacity:1}
+.fhud{position:absolute;left:10px;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.fhud .row{display:flex;flex-wrap:wrap;gap:6px}
+.fhud .t{background:rgba(10,14,22,.82);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:12px var(--f-mono)}
+.fhud .t b{color:var(--accent);font-weight:600}
+.flog{position:absolute;left:10px;bottom:10px;right:130px;display:flex;flex-direction:column;gap:3px;pointer-events:none}
+.flog div{background:rgba(10,14,22,.85);border-left:3px solid var(--muted);padding:3px 8px;font-size:12px;border-radius:3px}
+.flog .good{border-color:var(--good)}.flog .bad{border-color:var(--bad)}.flog .warn{border-color:var(--warn)}
+#btnAbort{position:absolute;right:10px;bottom:10px}
+body.flight .bin,body.flight .brief{opacity:.35;pointer-events:none}
+.modal{position:fixed;inset:0;background:rgba(4,7,12,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:18px 20px}
+.sheet h2{margin:0 0 6px;font:700 20px var(--f-disp)}.sheet h3{margin:16px 0 4px;font:700 14px var(--f-disp);color:var(--accent)}
+.sheet h4{margin:12px 0 2px;font:700 13px var(--f-disp);color:var(--accent)}
+.sheet p,.sheet li{color:#c5d0e6;font-size:13.5px}.sheet ul{padding-left:18px;margin:4px 0}.sheet a{color:var(--accent)}
+.sheet .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.res{list-style:none;padding:0;margin:8px 0}.res li{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--line)}
+.res .ok{color:var(--good)}.res .no{color:var(--bad)}
+.stars{font-size:26px;color:var(--warn);letter-spacing:4px}
+.sheet:has(.rpt){max-width:760px;background:radial-gradient(ellipse at 50% 0%,#162447 0%,#0b1222 65%,#070b14 100%);border:1px solid #2b3c63;box-shadow:0 24px 64px rgba(0,0,0,.65);padding:20px 22px}
+.rpt{display:flex;flex-direction:column;gap:12px}
+.rpt-head{display:flex;justify-content:center}
+.rpt-badge{padding:6px 22px;border-radius:999px;font:700 20px var(--f-disp);letter-spacing:.08em;text-transform:uppercase;border:2px solid var(--bad);color:#ff6b6b;background:rgba(240,90,90,.12);box-shadow:0 0 18px rgba(240,90,90,.28)}
+.rpt-badge.ok{border-color:var(--good);color:#6df0a8;background:rgba(66,204,132,.12);box-shadow:0 0 18px rgba(66,204,132,.28)}
+.rpt-badge.warn{border-color:var(--warn);color:#ffd269;background:rgba(244,184,68,.12);box-shadow:0 0 18px rgba(244,184,68,.24)}
+.rpt-top{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rpt-box{background:rgba(16,25,46,.78);border:1px solid #35476e;border-radius:12px;padding:12px 16px;position:relative}
+.rpt-lbl{font:700 12px var(--f-disp);letter-spacing:.09em;text-transform:uppercase;color:#c9d6f0;margin-bottom:8px}
+.rpt-rate{display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(19,30,54,.85),rgba(12,19,36,.85))}
+.rpt-stars{display:flex;gap:10px;padding:6px 18px;border:1px solid #415580;border-radius:8px;background:rgba(255,255,255,.04);font-size:26px;line-height:1}
+.rpt-stars span{color:#4b5a78}.rpt-stars span.on{color:var(--warn);text-shadow:0 0 12px rgba(244,184,68,.55)}
+.rpt-score{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rpt-big{font:700 32px var(--f-disp);line-height:1;color:#fff}.rpt-big span{font-size:22px;color:#9fb0d1;font-weight:600}
+.rpt-sci{display:flex;align-items:center;gap:10px;text-align:left}
+.rpt-sci svg{width:34px;height:34px;flex:none}
+.rpt-sci b{display:block;font:700 12px var(--f-disp);letter-spacing:.07em;text-transform:uppercase;color:#c9d6f0}
+.rpt-sci small{display:block;font:600 12px var(--f-mono);color:#9fb0d1}
+.rpt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rpt-card{border-radius:11px;padding:11px 13px;border:1px solid #2b4a4a;background:rgba(19,45,45,.42);display:flex;flex-direction:column;gap:5px}
+.rpt-card.no{border-color:#68333d;background:rgba(48,22,29,.48)}
+.rpt-ch{display:flex;align-items:center;gap:7px;font:700 12px var(--f-disp);letter-spacing:.07em;text-transform:uppercase;color:#d8e3f8}
+.rpt-ic{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none}
+.rpt-card.ok .rpt-ic{background:var(--good);color:#062314}
+.rpt-card.no .rpt-ic{background:var(--bad);color:#2c0609}
+.rpt-val{font:700 19px var(--f-disp);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.rpt-bar{position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:2px}
+.rpt-bar i{display:block;height:100%;border-radius:999px;background:var(--good)}
+.rpt-card.no .rpt-bar i{background:var(--bad)}
+.rpt-miss{font:600 12px var(--f-mono);color:#d7dee9;text-align:center;text-decoration:line-through;text-decoration-color:#ff5a5a;text-decoration-thickness:2px;margin-top:-2px}
+.rpt-need{font:600 10.5px var(--f-mono);color:#a7b6d4;text-align:right;text-transform:uppercase;letter-spacing:.04em}
+.rpt-crit{display:flex;align-items:center;gap:14px;background:rgba(16,25,46,.82);border:1px solid #35476e;border-radius:12px;padding:10px 14px}
+.rpt-crit-ic{position:relative;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid #2e4066;display:flex;align-items:center;justify-content:center;flex:none}
+.rpt-crit-ic .x{position:absolute;right:-4px;bottom:-4px;width:16px;height:16px;border-radius:50%;background:var(--bad);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.rpt-crit b{display:block;font:700 12px var(--f-disp);letter-spacing:.07em;text-transform:uppercase;color:#fff}
+.rpt-crit span{display:block;font:600 11.5px var(--f-mono);color:#c5d0e6;text-transform:uppercase;margin-top:2px}
+.rpt-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:2px}
+.rpt-acts .btn{padding:11px 12px;border-radius:9px;font:700 13px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.rpt-acts .btn.primary{background:linear-gradient(180deg,#70e4d9,#49bcae);color:#06131c;border-color:#7beae0}
+@media (max-width:640px){.rpt-top,.rpt-grid,.rpt-acts{grid-template-columns:1fr}}
+.ai{white-space:normal;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:8px}
+#ghost{position:fixed;left:0;top:0;width:84px;height:84px;pointer-events:none;z-index:60;transform:translate(-50%,-50%);border:2px solid var(--warn);border-radius:10px;background:rgba(16,23,37,.85);display:none}
+#ghost.ok{border-color:var(--accent)}#ghost canvas{width:100%;height:100%;display:block}
+.menu{position:fixed;inset:0;z-index:40;background:radial-gradient(ellipse at 25% 15%,#16285a 0%,#0a0e16 55%,#05070c 100%);display:flex;flex-direction:column;overflow:hidden;padding:max(14px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));transition:opacity .35s}
+.menu[hidden]{display:none}.menu.closing{opacity:0;pointer-events:none}
+#mstars{position:absolute;inset:0;width:100%;height:100%;display:block}
+.planet{position:absolute;border-radius:50%;pointer-events:none;animation:pfloat 14s ease-in-out infinite alternate}
+.planet.a{width:min(30vw,260px);aspect-ratio:1;right:-6vw;top:8vh;background:radial-gradient(circle at 32% 30%,#f0a766,#b4522e 55%,#4a1d12);box-shadow:0 0 60px rgba(224,138,60,.25)}
+.planet.b{width:min(12vw,90px);aspect-ratio:1;left:6vw;bottom:10vh;background:radial-gradient(circle at 35% 30%,#9fd7ff,#2f6fc4 60%,#0f2a57);animation-duration:10s}
+@keyframes pfloat{from{transform:translateY(-10px)}to{transform:translateY(14px)}}
+.mtop{position:relative;z-index:2;text-align:center;padding-top:6px}
+.mtop small{display:block;font:500 12px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.mtop h1{margin:2px 0 0;font:700 clamp(34px,6vw,56px)/1.05 var(--f-disp);letter-spacing:.02em}
+.mmain{position:relative;z-index:2;flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:center;width:100%;max-width:1080px;margin:0 auto}
+#mstage{position:relative;height:100%;min-height:260px;z-index:1}
+#mastro{position:absolute;left:0;top:0;width:clamp(120px,17vw,190px);will-change:transform;cursor:pointer;z-index:1}
+#mastro svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45))}
+.mpanel{position:relative;z-index:3;display:flex;flex-direction:column;gap:12px;min-width:0}
+.bubble{background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:16px 18px;position:relative;box-shadow:0 0 0 4px rgba(95,211,200,.08),0 18px 40px rgba(0,0,0,.4)}
+.bubble::before{content:"";position:absolute;left:-8px;top:44px;width:14px;height:14px;background:var(--panel);border-left:1px solid var(--accent);border-bottom:1px solid var(--accent);transform:rotate(45deg)}
+.who{display:flex;justify-content:space-between;gap:8px;font:600 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.who span:last-child{color:var(--muted)}
+#btext{margin:0;font-size:16px;line-height:1.55;min-height:7.8em}
+.mini{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:6px;margin-top:8px;font-size:11.5px;text-align:center}
+.mini span,.mini b{border:1px solid var(--line);border-radius:6px;padding:8px 4px;background:var(--panel2);color:var(--muted)}
+.mini b{border-color:var(--accent);color:var(--text)}
+.mini.chips{display:flex;flex-wrap:wrap}.mini.chips i{font:normal 11.5px var(--f-mono);border-radius:6px;padding:4px 8px;border:1px solid var(--line);background:var(--panel2)}
+.mini.chips .g{color:var(--good);border-color:var(--good)}.mini.chips .r{color:var(--bad);border-color:var(--bad)}
+.dots{display:flex;gap:6px;margin-top:10px}.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--accent)}
+.bacts,.mpills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mpills[hidden]{display:none}
+.mpills p{flex-basis:100%;margin:0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 4px}
+.linkbtn:hover{color:var(--text)}
+.btn[disabled]{opacity:.4;cursor:default}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:820px){.planet.b{display:none}.mmain{grid-template-columns:1fr;grid-template-rows:minmax(190px,32vh) auto;align-items:start;overflow:auto;gap:12px}.bubble::before{left:50%;top:-8px;transform:translateX(-50%) rotate(135deg)}#btext{min-height:9em;font-size:15px}}
+@media (max-width:900px){
+ body{height:auto}#app{height:auto;min-height:0}
+ .layout{display:flex;flex-direction:column}.stage{order:1}.bin{order:2}
+ .cv{flex:none;height:min(62vh,520px)}
+ .grid{display:flex;overflow-x:auto;padding:8px}.card{flex:0 0 108px;touch-action:pan-x}
+ .info{min-height:0}
+}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+<div id="app">
+ <header class="top">
+  <div class="brand"><b>Orbitix</b><small>Space mission design</small></div>
+  <div class="ctrl">
+   <label>Mission <select id="missionSel"></select></label>
+   <label>Launcher <select id="launchSel"></select></label>
+   <label>Level <select id="diffSel"><option value="beginner">Beginner</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option></select></label>
+  </div>
+  <div class="actions">
+   <button class="btn" id="btnSound" title="Toggle sound">🔊 Sound</button>
+   <button class="btn" id="btnOrbit">Orbit Lab</button>
+   <button class="btn" id="btnAcademy">Academy</button>
+   <button class="btn" id="btnTour">Tour</button><button class="btn" id="btnGuide">Guide</button>
+   <button class="btn" id="btnReview">Review design</button>
+   <button class="btn" id="btnCompare">Compare</button>
+   <button class="btn" id="btnClear">Clear</button>
+   <button class="btn primary" id="btnLaunch">Launch test &#9654;</button>
+  </div>
+ </header>
+ <main class="layout">
+  <aside class="bin"><h2>Hull &amp; propulsion</h2><div class="grid" id="gridL"></div><div class="info" id="infoL">Hover a part to see what it does. Drag it onto the platform, or tap it to add.</div></aside>
+  <section class="stage">
+   <div class="brief" id="brief"></div>
+   <div class="assist" id="assistBar"><b>Cosmo Assistant</b><span id="assistTxt">Add or adjust parts to see live engineering feedback.</span></div>
+   <div class="cv" id="cv">
+    <canvas id="gl"></canvas>
+    <div class="hint" id="hint"></div>
+    <div class="sel" id="selbar" hidden></div>
+    <div class="toast" id="toast"></div>
+    <div class="fhud" id="fhud" hidden>
+     <div class="row"><span class="t">Phase <b id="fPhase">-</b></span><span class="t">Day <b id="fDay">0</b></span><span class="t">Delta-v left <b id="fDv">0</b> m/s</span><span class="t">Power <b id="fPow">0</b></span><span class="t">Science <b id="fSci">0</b></span></div>
+    </div>
+    <div class="flog" id="flog" hidden></div>
+    <button class="btn" id="btnAbort" hidden>Back to workshop</button>
+   </div>
+  </section>
+  <aside class="bin"><h2>Systems &amp; instruments</h2><div class="grid" id="gridR"></div><div class="info" id="infoR">Solar wings, antennas, radiators and instruments attach to the sides of a module.</div></aside>
+ </main>
+</div>
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="menu" id="menu" hidden>
+ <canvas id="mstars"></canvas><div class="planet a"></div><div class="planet b"></div>
+ <div class="mtop"><small>Built for the Space Mission Design challenge</small><h1>Orbitix</h1></div>
+ <div class="mmain">
+  <div id="mstage"><div id="mastro" title="Click me!">
+   <svg id="astro" viewBox="0 -22 200 292" role="img" aria-label="Cosmo, the astronaut guide">
+    <defs><linearGradient id="vg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b2f86"/><stop offset="1" stop-color="#120d2e"/></linearGradient></defs>
+    <g id="aflame" transform="translate(100 204) scale(1 1) translate(-100 -204)"><path d="M70 204q-9 22 0 40q9-18 0-40z" fill="#ffb347"/><path d="M70 204q-4 12 0 22q4-10 0-22z" fill="#fff3b0"/><path d="M130 204q-9 22 0 40q9-18 0-40z" fill="#ffb347"/><path d="M130 204q-4 12 0 22q4-10 0-22z" fill="#fff3b0"/></g>
+    <rect x="46" y="108" width="108" height="90" rx="24" fill="#2b3552"/><rect x="46" y="140" width="108" height="8" fill="#f0a04b"/><rect x="58" y="188" width="24" height="16" rx="5" fill="#5fd3c8"/><rect x="118" y="188" width="24" height="16" rx="5" fill="#5fd3c8"/>
+    <rect x="72" y="182" width="26" height="50" rx="12" fill="#e9eef7"/><rect x="102" y="182" width="26" height="50" rx="12" fill="#dfe6f2"/>
+    <rect x="66" y="222" width="36" height="24" rx="11" fill="#5fd3c8"/><rect x="98" y="222" width="36" height="24" rx="11" fill="#4cbfb4"/>
+    <rect x="62" y="104" width="76" height="86" rx="30" fill="#f1f5fb"/><rect x="118" y="112" width="18" height="74" rx="9" fill="#d5ddec" opacity=".7"/>
+    <rect x="78" y="128" width="44" height="28" rx="7" fill="#dbe3f0" stroke="#a5b3cf" stroke-width="2"/><circle cx="90" cy="142" r="4.5" fill="#5fd3c8"/><circle cx="104" cy="142" r="4.5" fill="#f0a04b"/><rect x="112" y="137" width="6" height="10" rx="2" fill="#7b88a6"/>
+    <rect x="62" y="172" width="76" height="9" rx="4.5" fill="#5fd3c8"/>
+    <g transform="rotate(14 60 124)"><rect x="48" y="112" width="24" height="56" rx="12" fill="#e9eef7"/><circle cx="60" cy="172" r="12" fill="#5fd3c8"/></g>
+    <g><animateTransform attributeName="transform" type="rotate" values="-130 140 124;-165 140 124;-130 140 124" keyTimes="0;.5;1" dur="1.3s" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1" repeatCount="indefinite"/><rect x="128" y="112" width="24" height="56" rx="12" fill="#f1f5fb"/><circle cx="140" cy="172" r="12" fill="#5fd3c8"/></g>
+    <rect x="74" y="104" width="52" height="12" rx="6" fill="#5fd3c8"/>
+    <line x1="100" y1="8" x2="100" y2="-10" stroke="#c3cde0" stroke-width="3"/><circle cx="100" cy="-12" r="5" fill="#f0a04b"/>
+    <circle cx="42" cy="70" r="9" fill="#5fd3c8"/><circle cx="158" cy="70" r="9" fill="#5fd3c8"/>
+    <circle cx="100" cy="66" r="58" fill="#f4f7fc" stroke="#c3cde0" stroke-width="3"/>
+    <ellipse cx="100" cy="68" rx="44" ry="38" fill="url(#vg)"/>
+    <ellipse cx="86" cy="72" rx="4" ry="5" fill="#7fe8dc"><animate attributeName="ry" values="5;5;.8;5" keyTimes="0;.92;.96;1" dur="4s" repeatCount="indefinite"/></ellipse>
+    <ellipse cx="114" cy="72" rx="4" ry="5" fill="#7fe8dc"><animate attributeName="ry" values="5;5;.8;5" keyTimes="0;.92;.96;1" dur="4s" repeatCount="indefinite"/></ellipse>
+    <ellipse id="amouth" cx="100" cy="87" rx="6" ry="2.5" fill="#7fe8dc"/>
+    <ellipse cx="80" cy="52" rx="12" ry="6" fill="#fff" opacity=".7" transform="rotate(-28 80 52)"/><circle cx="116" cy="48" r="3" fill="#fff" opacity=".7"/>
+   </svg></div></div>
+  <div class="mpanel">
+   <div class="bubble"><div class="who"><span>Cosmo, flight guide</span><span id="mtag"></span></div>
+    <p id="btext" aria-hidden="true"></p><span class="sr-only" id="bsr" role="status"></span><div id="bmini"></div><div class="dots" id="mdots"></div></div>
+   <div class="bacts"><button class="btn" id="mBack">Back</button><button class="btn primary" id="mNext">Next</button><button class="linkbtn" id="mSkip">Skip to workshop</button></div>
+   <div class="mpills" id="mpills" hidden><p>Choose your first mission</p></div>
+  </div>
+ </div>
+</div>
+<div id="ghost"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){'use strict';
+const g0=9.80665,$=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const COMMS=['No antenna','Low-gain','Medium-gain','High-gain'];
+
+/* ---- Parts (simplified teaching numbers) ---- */
+const PARTS=[
+{id:'probe',name:'Probe Core',bin:'L',kind:'stack',role:'command',h:1.1,mass:180,cost:20,power:-300,desc:'The brain of an uncrewed ship: computer, gyroscopes and star tracker. Every ship needs one command module on top.'},
+{id:'crew',name:'Crew Capsule',bin:'L',kind:'stack',role:'command',h:1.3,mass:3600,cost:180,power:-1500,crew:2,shield:1,desc:'Carries two astronauts. Heavy and power hungry because of life support, but it has some built-in radiation shielding.'},
+{id:'bay',name:'Science Bay',bin:'L',kind:'stack',role:'mid',h:1.0,mass:220,cost:30,power:-150,science:25,desc:'A pressurised bay full of lab equipment that returns steady science.'},
+{id:'tankS',name:'Tank S',bin:'L',kind:'stack',role:'mid',h:1.0,mass:160,cost:9,prop:2000,desc:'Small propellant tank. Propellant is most of a ship\'s mass at launch.'},
+{id:'tankL',name:'Tank L',bin:'L',kind:'stack',role:'mid',h:1.8,mass:450,cost:22,prop:6000,desc:'Large propellant tank. More fuel means more delta-v, but also more mass for the launcher to lift.'},
+{id:'chem',name:'Chemical Engine',bin:'L',kind:'stack',role:'engine',h:.9,mass:520,cost:30,thrust:60000,isp:350,power:0,desc:'Strong thrust, short burns, modest efficiency (Isp 350 s). Fits crewed trips that cannot wait.'},
+{id:'ion',name:'Ion Engine',bin:'L',kind:'stack',role:'engine',h:.55,mass:240,cost:60,thrust:5,isp:3000,power:-5000,desc:'Very efficient (Isp 3000 s) but only 5 N of thrust and 5 kW of power. Burns take weeks.'},
+{id:'ntr',name:'Nuclear Thermal',bin:'L',kind:'stack',role:'engine',h:1.4,mass:2800,cost:240,thrust:70000,isp:900,power:-200,desc:'A reactor heats hydrogen: strong thrust and Isp 900 s. Heavy and expensive.'},
+{id:'solar',name:'Solar Wing',bin:'R',kind:'att',mass:60,cost:8,solar:1500,desc:'Makes 1,500 W at Earth distance. Sunlight weakens with the square of distance from the Sun.'},
+{id:'rtg',name:'RTG',bin:'R',kind:'att',mass:45,cost:45,gen:300,desc:'Radioactive heat becomes 300 W anywhere in the solar system, day or night.'},
+{id:'radiator',name:'Radiator',bin:'R',kind:'att',mass:40,cost:6,cool:2000,desc:'Sheds 2,000 W of waste heat into space. Electronics and crews make heat that must go somewhere.'},
+{id:'lga',name:'Low-gain Antenna',bin:'R',kind:'att',mass:3,cost:1,power:-20,comms:1,desc:'Simple, light link. Fine near Earth, too weak for far planets.'},
+{id:'mga',name:'Medium-gain Antenna',bin:'R',kind:'att',mass:18,cost:4,power:-60,comms:2,desc:'A small dish. Enough data rate for Mars-distance missions.'},
+{id:'hga',name:'High-gain Dish',bin:'R',kind:'att',mass:90,cost:12,power:-150,comms:3,desc:'A large dish that must be pointed at Earth. Needed for the outer solar system.'},
+{id:'cam',name:'Camera',bin:'R',kind:'att',mass:40,cost:9,power:-60,science:20,desc:'Imaging camera. Cheap science.'},
+{id:'spec',name:'Spectrometer',bin:'R',kind:'att',mass:60,cost:16,power:-80,science:30,desc:'Reads the chemistry of a surface from orbit.'},
+{id:'radar',name:'Radar Sounder',bin:'R',kind:'att',mass:150,cost:34,power:-300,science:45,desc:'Sees below the surface. Best science, but heavy and hungry for power.'},
+{id:'vault',name:'Radiation Vault',bin:'R',kind:'att',mass:350,cost:15,shield:2,desc:'Dense shielding plate that protects electronics and crew from solar storms and Jupiter\'s belts.'},
+{id:'battery',name:'Battery Pack',bin:'R',kind:'att',mass:55,cost:10,batt:1200,desc:'Stores 1,200 Wh of electrical energy for eclipses and peak loads when solar panels are in shadow.'},
+{id:'adcs',name:'Reaction Wheels',bin:'R',kind:'att',mass:32,cost:14,power:-45,adcs:1,desc:'Attitude Determination & Control System (ADCS): spinning flywheels and star sensors that stabilize pointing and offset mass imbalance.'},
+{id:'obc',name:'Flight Computer',bin:'R',kind:'att',mass:18,cost:12,power:-35,obc:1,desc:'Redundant radiation-hardened onboard computer (OBC) for autonomous navigation and fault recovery.'}
+];
+const P={};PARTS.forEach(p=>P[p.id]=p);
+function facts(p){const f=[fmt(p.mass)+' kg','$'+p.cost+'M'];
+ if(p.power<0)f.push('uses '+fmt(-p.power)+' W');if(p.prop)f.push(fmt(p.prop)+' kg propellant');
+ if(p.thrust)f.push((p.thrust>=1000?p.thrust/1000+' kN':p.thrust+' N')+' thrust, Isp '+p.isp+' s');
+ if(p.solar)f.push('+'+fmt(p.solar)+' W at 1 AU');if(p.gen)f.push('+'+p.gen+' W anywhere');if(p.batt)f.push('+'+fmt(p.batt)+' Wh storage');if(p.cool)f.push('sheds '+fmt(p.cool)+' W heat');
+ if(p.comms)f.push(COMMS[p.comms]+' link');if(p.science)f.push(p.science+' science');if(p.shield)f.push('shielding '+p.shield);if(p.crew)f.push(p.crew+' crew');if(p.adcs)f.push('+15% stability');if(p.obc)f.push('nav & fault recovery');
+ return f;}
+const LAUNCHERS=[{id:'s',name:'Light Lifter',cap:6000,cost:50},{id:'m',name:'Medium Lifter',cap:16000,cost:110},{id:'h',name:'Heavy Lifter',cap:45000,cost:300}];
+const MISSIONS=[
+{id:'moon',name:'Lunar Orbiter',body:'Moon',au:1,dv:3900,comms:1,shield:0,crew:0,science:60,budget:260,days:60,eclipseH:1.2,r:2.4,x:30,tex:'moon',blurb:'Map the Moon from a polar orbit. Delta-v from low Earth orbit is about 3.9 km/s.'},
+{id:'crew',name:'Crew Lunar Flyby',body:'Moon',au:1,dv:3300,comms:1,shield:2,crew:2,science:12,budget:650,days:14,eclipseH:1.0,r:2.4,x:30,tex:'moon',blurb:'Carry two astronauts around the Moon and home. Crews need life support, shielding and a fast trip.'},
+{id:'mars',name:'Mars Orbiter',body:'Mars',au:1.52,dv:4400,comms:2,shield:0,crew:0,science:80,budget:420,days:900,eclipseH:1.5,r:4.2,x:62,tex:'mars',blurb:'Orbit Mars (1.52 AU from the Sun, so only 43% of Earth sunlight).'},
+{id:'europa',name:'Europa Explorer',body:'Europa',au:5.2,dv:6300,comms:3,shield:2,crew:0,science:120,budget:900,days:2400,eclipseH:2.2,r:2.8,x:84,tex:'europa',blurb:'Orbit an icy moon of Jupiter. At 5.2 AU sunlight is 4%, and Jupiter\'s radiation is harsh.'}
+];
+
+/* ---- Engineering model ---- */
+const DIFF={
+ beginner:{label:'Beginner',balNeed:60,battFactor:.5,budgetMult:1.15},
+ intermediate:{label:'Intermediate',balNeed:75,battFactor:1,budgetMult:1},
+ advanced:{label:'Advanced',balNeed:85,battFactor:1.35,budgetMult:.9}
+};
+const S={mission:MISSIONS[0],launcher:LAUNCHERS[1],diff:'intermediate',stack:[],uid:1,selected:null,pop:null,last:null};
+function allParts(){const a=[];S.stack.forEach(m=>{a.push(P[m.id]);m.att.forEach(x=>a.push(P[x.id]));});return a;}
+function evaluate(){
+ const ms=S.mission,ln=S.launcher,df=DIFF[S.diff]||DIFF.intermediate,all=allParts(),au2=ms.au*ms.au;
+ const sum=k=>all.reduce((s,p)=>s+(p[k]||0),0),cnt=id=>all.filter(p=>p.id===id).length;
+ const eng=all.find(p=>p.role==='engine')||null,ev={ms,ln,df,eng,n:all.length};
+ ev.dry=sum('mass');ev.prop=sum('prop');ev.m0=ev.dry+ev.prop;
+ ev.hasCmd=all.some(p=>p.role==='command');ev.hasEng=!!eng;
+ ev.base=all.filter(p=>p.role!=='engine'&&p.power<0).reduce((s,p)=>s-p.power,0);
+ ev.engPow=eng&&eng.power<0?-eng.power:0;
+ const solar=cnt('solar'),rtg=cnt('rtg');
+ ev.gen1=solar*1500+rtg*300;ev.gen=solar*1500/au2+rtg*300;ev.genRTG=rtg*300;
+ ev.f=ev.engPow>0?clamp((ev.gen1-ev.base)/ev.engPow,0,1):1;
+ ev.thrust=eng?eng.thrust*ev.f:0;ev.ve=eng?eng.isp*g0:0;
+ ev.accel=ev.m0>0?ev.thrust/ev.m0:0;
+ ev.dv=(eng&&ev.dry>0&&ev.prop>0)?ev.ve*Math.log(ev.m0/ev.dry):0;
+ const used=eng?Math.min(ev.prop,ev.m0*(1-Math.exp(-ms.dv/ev.ve))):0;
+ ev.burnDays=!eng?null:(ev.thrust<=0?Infinity:used*ev.ve/ev.thrust/86400);
+ ev.heat=ev.base+.3*ev.engPow*ev.f;ev.cool=1500+2000*cnt('radiator');
+ ev.batt=sum('batt')+(ev.hasCmd?400:0);
+ ev.eclipseWh=Math.round(Math.max(0,ev.base-ev.genRTG)*(ms.eclipseH||1.2)*df.battFactor);
+ ev.comms=Math.max(0,...all.map(p=>p.comms||0));ev.shield=sum('shield');
+ ev.sci=sum('science');ev.crew=sum('crew');ev.cost=sum('cost')+ln.cost;
+ ev.budgetCap=Math.round(ms.budget*df.budgetMult);
+ ev.adcs=sum('adcs');ev.obc=sum('obc');
+ let mL=0,mR=0,mF=0,mB=0;
+ S.stack.forEach(m=>m.att.forEach(a=>{const w=P[a.id].mass;if(a.side===-1)mL+=w;else if(a.side===1)mR+=w;else if(a.side===-2)mB+=w;else if(a.side===2)mF+=w;}));
+ const mAtt=mL+mR+mF+mB,imb=Math.hypot(mR-mL,mF-mB);
+ const rawBal=mAtt===0?100:clamp(1-imb/Math.max(ev.dry*.35,300),0,1)*100;
+ ev.bal=Math.round(clamp(rawBal+ev.adcs*15,0,100));
+ ev.checks=makeChecks(ev);return ev;}
+function makeChecks(ev){const ms=ev.ms,df=ev.df,c=[];
+ const add=(key,label,have,need,more,txtH,txtN,advice)=>{const ok=have===null?false:(more?have>=need:have<=need);c.push({key,label,have,need,more,ok,h:txtH,n:txtN,advice});};
+ add('dv','Delta-v',ev.dv,ms.dv,true,fmt(ev.dv)+' m/s',fmt(ms.dv)+' m/s','Short by '+fmt(Math.max(0,ms.dv-ev.dv))+' m/s. Add propellant, remove mass, or pick an engine with higher Isp.');
+ add('mass','Launch mass',ev.m0,ev.ln.cap,false,fmt(ev.m0)+' kg',fmt(ev.ln.cap)+' kg','The '+ev.ln.name+' lifts '+fmt(ev.ln.cap)+' kg. Remove mass or choose a bigger launcher (which costs more).');
+ add('budget','Budget',ev.cost,ev.budgetCap,false,'$'+fmt(ev.cost)+'M','$'+ev.budgetCap+'M','Over budget by $'+fmt(ev.cost-ev.budgetCap)+'M. Swap costly parts for cheaper ones or use a smaller launcher.');
+ add('power','Power at '+ms.au+' AU',ev.gen,ev.base,true,fmt(ev.gen)+' W',fmt(ev.base)+' W','Not enough power at '+ms.au+' AU, where sunlight is '+Math.round(100/(ms.au*ms.au))+'% of Earth\'s. Add solar wings or RTGs.');
+ add('batt','Battery',ev.batt,ev.eclipseWh,true,fmt(ev.batt)+' Wh',fmt(ev.eclipseWh)+' Wh','Needs '+fmt(ev.eclipseWh)+' Wh to survive eclipse shadow. Add a Battery Pack or an RTG.');
+ add('comms','Comms',ev.comms,ms.comms,true,COMMS[ev.comms],COMMS[ms.comms]+'+','A '+COMMS[ms.comms].toLowerCase()+' antenna or better is needed to send data home from '+ms.body+'.');
+ if(ms.shield>0)add('shield','Shielding',ev.shield,ms.shield,true,String(ev.shield),String(ms.shield),'Add a Radiation Vault (+2) or a Crew Capsule (+1) to survive solar storms.');
+ add('heat','Heat',ev.heat,ev.cool,false,fmt(ev.heat)+' W',fmt(ev.cool)+' W cooling','Waste heat ('+fmt(ev.heat)+' W) exceeds cooling ('+fmt(ev.cool)+' W). Add a Radiator.');
+ add('time','Burn time',ev.burnDays,ms.days,false,ev.burnDays===null?'no engine':(isFinite(ev.burnDays)?(ev.burnDays<1?'<1 day':Math.round(ev.burnDays)+' days'):'never'),ms.days+' days','Engine burn takes too long. Ion engines need more power, or use a chemical engine.');
+ add('science','Science',ev.sci,Math.round(ms.science*.6),true,String(ev.sci),String(Math.round(ms.science*.6)),'Add instruments (Camera, Spectrometer, Radar Sounder or a Science Bay).');
+ if(ms.crew>0)add('crew','Crew',ev.crew,ms.crew,true,String(ev.crew),String(ms.crew),'This mission needs a Crew Capsule.');
+ add('balance','Balance',ev.bal,df.balNeed,true,ev.bal+'%',df.balNeed+'%','Balance side parts across all 4 sides or add Reaction Wheels (+15% stability).');
+ return c;}
+function outcome(ev){const ms=ev.ms,o={ev,notes:[]};let why=null;
+ if(!ev.hasCmd)why='There is no command module, so nothing can steer or talk to the ship.';
+ else if(!ev.hasEng)why='There is no engine, so the ship goes nowhere.';
+ else if(ev.prop<=0)why='There is no propellant tank. The engine has nothing to burn.';
+ else if(ev.m0>ev.ln.cap)why='The '+ev.ln.name+' can lift '+fmt(ev.ln.cap)+' kg but your ship is '+fmt(ev.m0)+' kg.';
+ o.launchOk=!why;o.launchWhy=why;o.reach=o.launchOk?Math.min(1,ev.dv/ms.dv):0;
+ let f=1,crewLost=false;
+ if(ev.comms<ms.comms)f*=.2;
+ if(ev.shield<ms.shield){if(ms.crew)crewLost=true;else f*=.4;}
+ if(ev.base>0&&ev.gen<ev.base)f*=clamp(ev.gen/ev.base,0,1);
+ if(ev.heat>ev.cool)f*=clamp(ev.cool/ev.heat,.4,1);
+ o.crewLost=crewLost;o.sciRet=o.reach>=1&&!crewLost?ev.sci*f:0;
+ const checksOk=ev.checks.every(c=>c.ok);
+ o.success=o.launchOk&&o.reach>=1&&checksOk&&!crewLost;
+ let sc=0;
+ if(o.launchOk){sc=10*o.reach;if(o.reach>=1)sc=40+30*Math.min(1,o.sciRet/ms.science)+10*clamp((ms.budget-ev.cost)/ms.budget,0,1)+5*(ev.m0<=.85*ev.ln.cap?1:ev.m0<=ev.ln.cap?.5:0)+(o.success?15:0);}
+ o.score=Math.round(Math.min(100,sc));o.stars=!o.success?0:(o.score>=90?3:o.score>=75?2:1);return o;}
+
+/* ---- 3D part models ---- */
+const MATS={};
+function mat(c,o){const k=c+JSON.stringify(o||{});return MATS[k]||(MATS[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:.4,roughness:.5},o||{})));}
+const cyl=(a,b,h,m,s)=>new THREE.Mesh(new THREE.CylinderGeometry(a,b,h,s||28),m);
+const box=(w,h,d,m)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
+const sph=(r,m)=>new THREE.Mesh(new THREE.SphereGeometry(r,20,14),m);
+const put=(o,x,y,z)=>{o.position.set(x||0,y||0,z||0);return o;};
+const rotz=o=>{o.rotation.z=Math.PI/2;return o;},rotx=o=>{o.rotation.x=Math.PI/2;return o;};
+const C={hull:'#dfe5ee',dark:'#2b3448',steel:'#6f7b93',gold:'#d9a441',teal:'#5fd3c8',orange:'#e08a3c',foam:'#e3b27a',white:'#f4f7fb'};
+function tex(draw,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;}
+let solarT=null,radT=null;
+function solarTex(){return solarT||(solarT=tex(x=>{x.fillStyle='#17306b';x.fillRect(0,0,256,128);x.strokeStyle='#5c86dd';x.lineWidth=2;for(let i=0;i<=8;i++){x.beginPath();x.moveTo(i*32,0);x.lineTo(i*32,128);x.stroke();}for(let j=0;j<=4;j++){x.beginPath();x.moveTo(0,j*32);x.lineTo(256,j*32);x.stroke();}},256,128));}
+function radTex(){return radT||(radT=tex(x=>{x.fillStyle='#eef2f8';x.fillRect(0,0,128,128);x.strokeStyle='#9aa6bd';x.lineWidth=3;for(let j=8;j<128;j+=16){x.beginPath();x.moveTo(0,j);x.lineTo(128,j);x.stroke();}},128,128));}
+function dish(r){return new THREE.Mesh(new THREE.SphereGeometry(r,24,10,0,Math.PI*2,Math.PI/2,Math.PI/2.6),new THREE.MeshStandardMaterial({color:C.white,metalness:.3,roughness:.4,side:THREE.DoubleSide}));}
+function tank(h){const g=new THREE.Group();g.add(cyl(.6,.6,h,mat(C.foam,{metalness:.1,roughness:.7})));[-1,1].forEach(s=>g.add(put(cyl(.62,.62,.06,mat(C.steel)),0,s*(h/2-.12),0)));g.add(put(cyl(.3,.3,.02,mat(C.dark)),0,0,.6));return g;}
+function bell(pts,color){return new THREE.Mesh(new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),28),mat(color||C.steel,{side:THREE.DoubleSide,metalness:.7}));}
+const BUILD={
+probe(){const g=new THREE.Group();g.add(put(cyl(.6,.6,.7,mat(C.hull)),0,-.2));g.add(put(cyl(.2,.58,.4,mat(C.hull)),0,.35));g.add(put(cyl(.62,.62,.08,mat(C.teal,{metalness:.2})),0,-.5));g.add(put(sph(.11,mat(C.gold)),0,.6));g.add(put(box(.3,.18,.04,mat(C.dark)),0,-.1,.6));return g;},
+crew(){const g=new THREE.Group();g.add(put(cyl(.6,.6,.5,mat(C.steel)),0,-.4));g.add(put(cyl(.28,.6,.8,mat(C.hull)),0,.25));g.add(put(cyl(.14,.14,.12,mat(C.dark)),0,.69));[-.2,0,.2].forEach(x=>g.add(put(box(.12,.1,.03,mat(C.dark)),x,.2,.46-Math.abs(x)*.3)));return g;},
+bay(){const g=new THREE.Group();g.add(cyl(.6,.6,1,mat(C.hull)));[-.3,.3].forEach(y=>g.add(put(cyl(.63,.63,.1,mat(C.gold)),0,y)));g.add(put(box(.5,.5,.05,mat(C.dark)),0,0,.6));return g;},
+tankS(){return tank(1);},tankL(){return tank(1.8);},
+chem(){const g=new THREE.Group();g.add(bell([[.16,.4],[.2,.15],[.3,-.05],[.44,-.3],[.52,-.45]]));g.add(put(cyl(.42,.42,.18,mat(C.dark)),0,.4));return g;},
+ion(){const g=new THREE.Group();g.add(put(cyl(.55,.55,.16,mat(C.dark)),0,.2));[[-.26,-.26],[.26,-.26],[-.26,.26],[.26,.26]].forEach(p=>{g.add(put(cyl(.14,.16,.22,mat(C.steel)),p[0],0,p[1]));g.add(put(cyl(.1,.1,.02,mat('#6fb4ff',{emissive:'#2a6fe0',emissiveIntensity:.9})),p[0],-.12,p[1]));});return g;},
+ntr(){const g=new THREE.Group();g.add(put(cyl(.36,.36,.6,mat(C.dark)),0,.4));g.add(put(cyl(.38,.38,.12,mat(C.orange,{emissive:'#a8431a',emissiveIntensity:.7})),0,.4));g.add(bell([[.2,.1],[.28,-.1],[.42,-.4],[.6,-.7]]));return g;},
+solar(){const g=new THREE.Group();g.add(put(rotz(cyl(.04,.04,.55,mat(C.steel))),.28,0,0));g.add(put(box(1.9,.95,.03,new THREE.MeshStandardMaterial({map:solarTex(),metalness:.3,roughness:.4})),1.5,0,0));return g;},
+rtg(){const g=new THREE.Group();g.add(put(rotz(cyl(.13,.13,1,mat('#4d566b'))),.6,0,0));for(let i=0;i<5;i++)g.add(put(rotz(cyl(.2,.2,.035,mat(C.orange,{metalness:.2}))),.25+i*.18,0,0));g.add(put(box(.15,.1,.1,mat(C.steel)),.08,0,0));return g;},
+radiator(){const g=new THREE.Group();g.add(put(rotz(cyl(.03,.03,.3,mat(C.steel))),.15,0,0));g.add(put(box(1.3,.85,.03,new THREE.MeshStandardMaterial({map:radTex(),metalness:.2,roughness:.5})),.95,0,0));return g;},
+lga(){const g=new THREE.Group();g.add(put(cyl(.02,.02,.9,mat(C.steel)),.12,.45,0));g.add(put(sph(.06,mat(C.teal)),.12,.93,0));g.add(put(box(.14,.08,.08,mat(C.dark)),.06,0,0));return g;},
+mga(){const g=new THREE.Group();g.add(put(cyl(.02,.02,.45,mat(C.steel)),.15,.22,0));const d=dish(.24);d.rotation.z=-.5;g.add(put(d,.25,.55,0));g.add(put(sph(.04,mat(C.gold)),.3,.7,0));return g;},
+hga(){const g=new THREE.Group();g.add(put(cyl(.025,.025,.7,mat(C.steel)),.2,.35,0));const d=dish(.7);d.rotation.z=-.55;g.add(put(d,.38,.95,0));g.add(put(cyl(.015,.015,.45,mat(C.steel)),.5,1.15,0));g.add(put(sph(.05,mat(C.gold)),.55,1.4,0));return g;},
+cam(){const g=new THREE.Group();g.add(put(box(.12,.08,.08,mat(C.steel)),.06,0,0));g.add(put(box(.22,.22,.3,mat(C.dark)),.2,0,.1));g.add(put(rotx(cyl(.07,.08,.14,mat(C.teal,{metalness:.8}))),.2,0,.3));return g;},
+spec(){const g=new THREE.Group();g.add(put(box(.3,.34,.5,mat(C.gold,{metalness:.7})),.25,0,0));g.add(put(rotx(cyl(.09,.09,.3,mat(C.dark))),.25,0,.35));return g;},
+radar(){const g=new THREE.Group();g.add(put(box(.2,.2,.2,mat(C.gold,{metalness:.7})),.12,0,0));g.add(put(rotz(cyl(.025,.025,1.5,mat(C.steel))),.8,0,0));for(let i=0;i<5;i++)g.add(put(box(.02,.55-.06*i,.02,mat(C.steel)),.3+i*.28,0,0));return g;},
+vault(){const g=new THREE.Group();g.add(put(box(.12,.95,.85,mat('#394357')),.08,0,0));[-.3,.3].forEach(y=>g.add(put(box(.125,.08,.86,mat(C.gold,{metalness:.2})),.08,y,0)));return g;},
+battery(){const g=new THREE.Group();g.add(put(box(.32,.46,.36,mat(C.dark)),.22,0,0));[-.12,0,.12].forEach(y=>g.add(put(box(.34,.04,.38,mat(C.teal,{emissive:'#1d6e66',emissiveIntensity:.6})),.22,y,0)));return g;},
+adcs(){const g=new THREE.Group();g.add(put(box(.28,.28,.28,mat(C.steel)),.2,0,0));g.add(put(cyl(.18,.18,.08,mat(C.gold,{metalness:.7})),.2,0,0));g.add(put(rotx(cyl(.18,.18,.08,mat(C.teal))),.2,0,0));return g;},
+obc(){const g=new THREE.Group();g.add(put(box(.26,.34,.24,mat(C.gold,{metalness:.7})),.18,0,0));[-.1,0,.1].forEach(y=>g.add(put(box(.3,.03,.26,mat(C.dark))),.18,y,0));return g;}
+};
+BUILD.tankS=()=>tank(1);BUILD.tankL=()=>tank(1.8);
+function disposeTree(o){o.traverse(n=>{if(n.geometry)n.geometry.dispose();});}
+
+/* ---- Part previews drawn from one offscreen renderer ---- */
+const pr=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});pr.setPixelRatio(1);pr.setSize(152,152);pr.outputEncoding=THREE.sRGBEncoding;
+const pscene=new THREE.Scene(),pcam=new THREE.PerspectiveCamera(30,1,.1,50),holder=new THREE.Group();
+pcam.position.set(0,.6,6.2);pcam.lookAt(0,0,0);pscene.add(holder);pscene.add(new THREE.AmbientLight(0xffffff,.7));
+const pk=new THREE.DirectionalLight(0xffffff,1.1);pk.position.set(3,5,4);pscene.add(pk);
+const PV={};
+function previewGroup(id){if(PV[id])return PV[id];const g=new THREE.Group(),inner=BUILD[id]();const bb=new THREE.Box3().setFromObject(inner),c=bb.getCenter(new THREE.Vector3()),s=bb.getSize(new THREE.Vector3());inner.position.sub(c);g.scale.setScalar(2.1/Math.max(s.x,s.y,s.z));g.add(inner);return PV[id]=g;}
+function drawPreview(id,ang,cv){const p=P[id],g=previewGroup(id);holder.clear();holder.add(g);g.rotation.y=ang;pr.render(pscene,pcam);const x=(cv||p.cardCanvas).getContext('2d');x.clearRect(0,0,152,152);x.drawImage(pr.domElement,0,0);}
+
+/* ---- Workspace scene ---- */
+const canvas=$('gl'),renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputEncoding=THREE.sRGBEncoding;
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,.1,200),shipRoot=new THREE.Group();scene.add(shipRoot);
+scene.add(new THREE.AmbientLight(0xffffff,.6));
+const key=new THREE.DirectionalLight(0xffffff,1.15);key.position.set(4,8,6);scene.add(key);
+const rim=new THREE.DirectionalLight(0x5fd3c8,.5);rim.position.set(-6,3,-5);scene.add(rim);
+const dais=new THREE.Mesh(new THREE.CylinderGeometry(3,3.1,.12,64),new THREE.MeshStandardMaterial({color:'#1a2540',metalness:.5,roughness:.6}));dais.position.y=-.07;scene.add(dais);
+const daisRing=new THREE.Mesh(new THREE.TorusGeometry(2.85,.03,8,80),new THREE.MeshBasicMaterial({color:'#5fd3c8'}));daisRing.rotation.x=Math.PI/2;scene.add(daisRing);
+const grid=new THREE.GridHelper(40,40,'#1d2a47','#141d33');grid.position.y=-.14;scene.add(grid);
+const stars=(()=>{const a=[];for(let i=0;i<500;i++){const r=60+Math.random()*40,t=Math.random()*6.28,u=Math.random()*1.6-.3;a.push(Math.cos(t)*r,u*r*.6+10,Math.sin(t)*r);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(a,3));return new THREE.Points(g,new THREE.PointsMaterial({color:'#9db4e0',size:.35}));})();scene.add(stars);
+const ringInd=new THREE.Mesh(new THREE.TorusGeometry(.8,.035,8,48),new THREE.MeshBasicMaterial({color:'#5fd3c8'}));ringInd.rotation.x=Math.PI/2;ringInd.visible=false;shipRoot.add(ringInd);
+const dotInd=new THREE.Mesh(new THREE.SphereGeometry(.12,14,10),new THREE.MeshBasicMaterial({color:'#5fd3c8'}));dotInd.visible=false;shipRoot.add(dotInd);
+let ship=new THREE.Group(),index={},selBox=null,camY=2,camD=12,zoom=1,mode='build';shipRoot.add(ship);
+
+/* ---- Ship data helpers ---- */
+const nextUid=()=>S.uid++;
+function layout(){let y=0;const mods=new Array(S.stack.length);for(let i=S.stack.length-1;i>=0;i--){const h=P[S.stack[i].id].h;mods[i]={y0:y,y1:y+h,yc:y+h/2};y+=h;}return{mods,H:y};}
+function buildShipGroup(withIds){const grp=new THREE.Group(),L=layout(),idx={};
+ S.stack.forEach((m,i)=>{const mg=BUILD[m.id]();mg.position.y=L.mods[i].yc;grp.add(mg);if(withIds){mg.userData.uid=m.uid;idx[m.uid]=mg;}
+  m.att.forEach(a=>{const ag=BUILD[a.id](),slot=m.att.filter(x=>x.side===a.side).indexOf(a),y=L.mods[i].yc+(slot?-.18:.18),off=slot?-.22:.22;
+   if(a.side===1){ag.position.set(.6,y,off);ag.rotation.y=0;}
+   else if(a.side===-1){ag.position.set(-.6,y,off);ag.rotation.y=Math.PI;}
+   else if(a.side===2){ag.position.set(off,y,.6);ag.rotation.y=-Math.PI/2;}
+   else{ag.position.set(off,y,-.6);ag.rotation.y=Math.PI/2;}
+   if(withIds){ag.userData.uid=a.uid;idx[a.uid]=ag;}grp.add(ag);});});
+ return{grp,idx,H:L.H};}
+function findPlaced(uid){for(let i=0;i<S.stack.length;i++){if(S.stack[i].uid===uid)return{t:'m',i};const k=S.stack[i].att.findIndex(a=>a.uid===uid);if(k>=0)return{t:'a',i,k};}return null;}
+function removeUid(uid){const f=findPlaced(uid);if(!f)return null;let part,lost=0;if(f.t==='m'){const m=S.stack[f.i];part=P[m.id];lost=m.att.length;S.stack.splice(f.i,1);}else{part=P[S.stack[f.i].att[f.k].id];S.stack[f.i].att.splice(f.k,1);}if(S.selected===uid)S.selected=null;if(lost)toast('Removed '+part.name+' and its '+lost+' attached part'+(lost>1?'s':''));return part;}
+function computeTarget(p,lc){const L=layout(),n=S.stack.length;
+ if(p.kind==='stack'){const hasCmd=n&&P[S.stack[0].id].role==='command',hasEng=n&&P[S.stack[n-1].id].role==='engine';
+  if(p.role==='command')return hasCmd?{kind:'replace',idx:0,y:L.mods[0].yc}:{kind:'insert',idx:0,y:L.H};
+  if(p.role==='engine')return hasEng?{kind:'replace',idx:n-1,y:L.mods[n-1].yc}:{kind:'insert',idx:n,y:0};
+  const start=hasCmd?1:0,end=n-(hasEng?1:0);let c=0;for(let i=start;i<end;i++)if(L.mods[i].yc>lc.y)c++;const idx=start+c;return{kind:'insert',idx,y:idx<n?L.mods[idx].y1:0};}
+ if(!n)return{kind:'none',msg:'Add a hull module first, then attach this to it.'};
+ let best=0,bd=1e9;L.mods.forEach((m,i)=>{const d=Math.abs(m.yc-lc.y);if(d<bd){bd=d;best=i;}});
+ let side=lc.side||(Math.abs(lc.x)>=Math.abs(lc.z)?(lc.x<0?-1:1):(lc.z<0?-2:2));const mod=S.stack[best],used=s=>mod.att.filter(a=>a.side===s).length;
+ const cand=[side,-side,1,-1,2,-2].find(s=>used(s)<2);
+ if(!cand)return{kind:'none',msg:'All 4 sides of that module are full.'};
+ return{kind:'attach',mod:best,side:cand,y:L.mods[best].yc};}
+let lastPartNote='';
+function applyTarget(p,t){if(!t||t.kind==='none'){toast(t&&t.msg||'Cannot place that here.');return false;}
+ const uid=nextUid();
+ if(t.kind==='replace'){S.stack[t.idx].id=p.id;S.stack[t.idx].uid=uid;}
+ else if(t.kind==='insert'){if(S.stack.length>=8){toast('The stack is full (8 modules). Remove one first.');return false;}S.stack.splice(t.idx,0,{uid,id:p.id,att:[]});}
+ else S.stack[t.mod].att.push({uid,id:p.id,side:t.side});
+ const eff=[];if(p.power<0)eff.push('draws '+fmt(-p.power)+' W');if(p.solar)eff.push('+'+fmt(p.solar)+' W at 1 AU');if(p.gen)eff.push('+'+p.gen+' W anywhere');if(p.batt)eff.push('+'+fmt(p.batt)+' Wh battery');if(p.science)eff.push('+'+p.science+' science');if(p.prop)eff.push('+'+fmt(p.prop)+' kg fuel');
+ lastPartNote='Added '+p.name+' (+'+fmt(p.mass)+' kg, $'+p.cost+'M'+(eff.length?', '+eff.join(', '):'')+'). ';
+ S.pop=uid;S.popT=0;return true;}
+function autoAdd(p){const L=layout(),n=S.stack.length;let lc={x:1,y:L.H/2,z:0};
+ if(p.kind==='att'){const order=[];for(let i=1;i<n;i++)order.push(i);if(n)order.push(0);let done=false;
+  for(const i of order){const m=S.stack[i],sides=[1,-1,2,-2].map(s=>({s,c:m.att.filter(a=>a.side===s).length,w:m.att.filter(a=>a.side===s).reduce((t,a)=>t+P[a.id].mass,0)})).filter(x=>x.c<2);
+   if(!sides.length)continue;sides.sort((a,b)=>a.c-b.c||a.w-b.w);lc={x:0,y:L.mods[i].yc,z:0,side:sides[0].s};done=true;break;}
+  if(!done&&n){toast('All attachment slots are full.');return;}}
+ if(applyTarget(p,computeTarget(p,lc)))refresh();}
+let toastT=0;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---- Requirements panel, hint, persistence ---- */
+function chipHTML(c,idle){const ratio=c.have===null||!isFinite(c.have)?0:(c.more?(c.need>0?c.have/c.need:1):(c.need>0?c.have/c.need:0));const w=clamp(ratio,0,1)*100,st=idle?'idle':(c.ok?'ok':'bad');
+ return'<div class="chip '+st+'"><small>'+esc(c.label)+'</small><em>'+(c.ok&&!idle?'&#10003; ':(idle?'':'&#10007; '))+esc(c.h)+' / '+esc(c.n)+'</em><div class="bar"><i style="width:'+w+'%"></i></div></div>';}
+function renderBrief(ev){const ms=ev.ms,idle=ev.n===0;$('brief').innerHTML='<h1>'+esc(ms.name)+'</h1><p>'+esc(ms.blurb)+'</p><div class="chips">'+ev.checks.map(c=>chipHTML(c,idle)).join('')+'</div>';}
+function hintText(ev){if(!ev.n)return'Drag a part from either side onto the platform, or tap a part to add it. Start with a command module on top.';
+ if(!ev.hasCmd)return'Next: add a Probe Core (or Crew Capsule). It always sits at the top.';
+ if(!ev.hasEng)return'Next: add an engine. It always sits at the bottom.';
+ if(ev.prop<=0)return'Next: add a propellant tank between the command module and the engine.';
+ const bad=ev.checks.filter(c=>!c.ok);if(bad.length)return'Red boxes above show what this mission still needs: '+bad.slice(0,3).map(c=>c.label.toLowerCase()).join(', ')+'.';
+ return'Every requirement is met. Press Launch test, or trim cost and mass for a higher score.';}
+function save(){try{localStorage.setItem('shipwright.v1',JSON.stringify({m:S.mission.id,l:S.launcher.id,s:S.stack.map(m=>({id:m.id,a:m.att.map(a=>({id:a.id,side:a.side}))}))}));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('shipwright.v1')||'null');if(!d||!Array.isArray(d.s))return false;S.mission=MISSIONS.find(m=>m.id===d.m)||S.mission;S.launcher=LAUNCHERS.find(l=>l.id===d.l)||S.launcher;S.stack=d.s.filter(m=>P[m.id]&&P[m.id].kind==='stack').slice(0,8).map(m=>({uid:nextUid(),id:m.id,att:(m.a||[]).filter(a=>P[a.id]&&P[a.id].kind==='att').slice(0,8).map(a=>({uid:nextUid(),id:a.id,side:[-2,-1,1,2].includes(a.side)?a.side:(a.side<0?-1:1)}))}));return true;}catch(e){return false;}}
+function starter(){const m=(id,a)=>({uid:nextUid(),id,att:(a||[]).map(x=>({uid:nextUid(),id:x[0],side:x[1]}))});S.stack=[m('probe',[['solar',1],['lga',-1]]),m('tankS'),m('chem')];}
+function updateAssistant(ev){
+ const el=$('assistTxt');if(!el)return;
+ if(!ev.n){el.textContent='Start with a Probe Core or Crew Capsule on top, then add propellant and an engine.';return;}
+ const bad=ev.checks.filter(c=>!c.ok);
+ if(bad.length){el.textContent=(lastPartNote||'')+'Priority check: '+bad[0].label+' — '+bad[0].advice;return;}
+ el.textContent=(lastPartNote||'')+'All '+ev.checks.length+' checks pass! Power margin: +'+fmt(ev.gen-ev.base)+' W, Delta-v: '+fmt(ev.dv)+' m/s, Balance: '+ev.bal+'%.';
+}
+function refresh(){disposeTree(ship);shipRoot.remove(ship);const b=buildShipGroup(true);ship=b.grp;index=b.idx;shipRoot.add(ship);
+ if(selBox){scene.remove(selBox);selBox.geometry.dispose();selBox=null;}
+ shipRoot.updateMatrixWorld(true);if(S.selected&&index[S.selected]){selBox=new THREE.BoxHelper(index[S.selected],0x5fd3c8);scene.add(selBox);}else S.selected=null;
+ const ev=evaluate();S.last=ev;renderBrief(ev);$('hint').textContent=hintText(ev);updateAssistant(ev);
+ const sb=$('selbar');if(S.selected){const f=findPlaced(S.selected),id=f.t==='m'?S.stack[f.i].id:S.stack[f.i].att[f.k].id;sb.hidden=false;sb.innerHTML='<span><b>'+esc(P[id].name)+'</b> &middot; '+esc(facts(P[id]).slice(0,3).join(' &middot; '))+'</span><button class="btn" id="btnRm">Remove</button>';$('btnRm').onclick=()=>{removeUid(S.selected);S.selected=null;refresh();};}else sb.hidden=true;
+ save();}
+
+/* ---- Dragging ---- */
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let drag=null,hoverId=null,hoverAng=.7,pt=null;
+const isNarrow=()=>window.matchMedia('(max-width:900px)').matches;
+function clientToLocal(cx,cy){const r=canvas.getBoundingClientRect();if(cx<r.left||cx>r.right||cy<r.top||cy>r.bottom)return null;ndc.set((cx-r.left)/r.width*2-1,-((cy-r.top)/r.height*2-1));ray.setFromCamera(ndc,cam);
+ const nrm=cam.getWorldDirection(new THREE.Vector3()),pl=new THREE.Plane().setFromNormalAndCoplanarPoint(nrm,new THREE.Vector3(0,camY,0)),pt3=new THREE.Vector3();if(!ray.ray.intersectPlane(pl,pt3))return null;shipRoot.updateMatrixWorld(true);return shipRoot.worldToLocal(pt3);}
+function showIndicator(t){ringInd.visible=false;dotInd.visible=false;if(!t||t.kind==='none')return;
+ if(t.kind==='attach'){dotInd.visible=true;dotInd.position.set(Math.abs(t.side)===1?t.side*.62:0,t.y,Math.abs(t.side)===2?(t.side>0?.62:-.62):0);}else{ringInd.visible=true;ringInd.position.set(0,t.y,0);ringInd.material.color.set(t.kind==='replace'?'#f0b24a':'#5fd3c8');}}
+function startGhost(p,e){const g=$('ghost');g.innerHTML='<canvas width="152" height="152"></canvas>';g.firstChild.getContext('2d').drawImage(p.cardCanvas,0,0);g.style.display='block';moveGhost(e);}
+function moveGhost(e){const g=$('ghost');g.style.left=e.clientX+'px';g.style.top=e.clientY+'px';}
+function onCardDown(e,p){if(mode!=='build'||e.button>0)return;drag={p,sx:e.clientX,sy:e.clientY,active:false,placed:false};window.addEventListener('pointermove',onDragMove);window.addEventListener('pointerup',onDragUp);window.addEventListener('pointercancel',onDragUp);}
+function onDragMove(e){if(!drag)return;if(!drag.active){if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6)return;drag.active=true;startGhost(drag.p,e);}
+ moveGhost(e);const lc=clientToLocal(e.clientX,e.clientY),t=lc?computeTarget(drag.p,lc):null;showIndicator(t);$('ghost').classList.toggle('ok',!!(t&&t.kind!=='none'));}
+function onDragUp(e){window.removeEventListener('pointermove',onDragMove);window.removeEventListener('pointerup',onDragUp);window.removeEventListener('pointercancel',onDragUp);
+ const d=drag;drag=null;$('ghost').style.display='none';showIndicator(null);if(!d)return;
+ if(!d.active){if(!d.placed)autoAdd(d.p);return;}
+ const lc=e.type==='pointercancel'?null:clientToLocal(e.clientX,e.clientY);
+ if(lc){if(!applyTarget(d.p,computeTarget(d.p,lc))&&d.placed)autoAdd(d.p);}else if(d.placed)toast('Removed '+d.p.name);
+ refresh();}
+function hitUid(e){const r=canvas.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(ndc,cam);const h=ray.intersectObjects(ship.children,true)[0];if(!h)return null;let o=h.object;while(o&&o.userData.uid===undefined)o=o.parent;return o?o.userData.uid:null;}
+canvas.addEventListener('pointerdown',e=>{if(mode!=='build')return;canvas.setPointerCapture(e.pointerId);const u=hitUid(e);pt={sx:e.clientX,sy:e.clientY,uid:u,yaw:shipRoot.rotation.y,moved:false};});
+canvas.addEventListener('pointermove',e=>{if(mode!=='build'||!pt)return;const dx=e.clientX-pt.sx,dy=e.clientY-pt.sy;if(Math.hypot(dx,dy)>6)pt.moved=true;
+ if(pt.uid!==null){if(pt.moved){const part=removeUid(pt.uid);pt=null;if(part){refresh();drag={p:part,sx:e.clientX,sy:e.clientY,active:true,placed:true};startGhost(part,e);window.addEventListener('pointermove',onDragMove);window.addEventListener('pointerup',onDragUp);window.addEventListener('pointercancel',onDragUp);}}}
+ else shipRoot.rotation.y=pt.yaw+dx*.01;});
+canvas.addEventListener('pointerup',()=>{if(!pt)return;if(!pt.moved){S.selected=pt.uid!==null&&pt.uid!==S.selected?pt.uid:null;refresh();}pt=null;});
+canvas.addEventListener('wheel',e=>{if(mode!=='build')return;e.preventDefault();zoom=clamp(zoom*(e.deltaY>0?1.08:.92),.6,1.8);},{passive:false});
+canvas.addEventListener('dblclick',()=>{shipRoot.rotation.y=0;zoom=1;});
+window.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&S.selected&&mode==='build'&&!$('modal').hidden===false){removeUid(S.selected);refresh();}if(e.key==='Escape')closeModal();});
+function makeCards(){PARTS.forEach(p=>{const host=$(p.bin==='L'?'gridL':'gridR'),el=document.createElement('div');el.className='card';el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label',p.name+'. Drag onto the platform or press Enter to add.');
+ el.innerHTML='<button class="card-i" type="button" title="Part details" aria-label="Details for '+esc(p.name)+'">i</button><canvas width="152" height="152"></canvas><b>'+esc(p.name)+'</b><span>'+fmt(p.mass)+' kg &middot; $'+p.cost+'M</span>';host.appendChild(el);p.cardCanvas=el.querySelector('canvas');
+ const ib=el.querySelector('.card-i');
+ ib.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();});
+ ib.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();showPartInfo(p);});
+ const info=()=>{$('info'+p.bin).innerHTML='<b>'+esc(p.name)+'</b>'+esc(p.desc)+'<i>'+esc(facts(p).join(' | '))+'</i>';};
+ el.addEventListener('pointerdown',e=>onCardDown(e,p));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();autoAdd(p);}});
+ el.addEventListener('pointerenter',()=>{hoverId=p.id;info();});el.addEventListener('pointerleave',()=>{if(hoverId===p.id){hoverId=null;drawPreview(p.id,.7);}});el.addEventListener('focus',info);drawPreview(p.id,.7);});}
+
+/* ---- Test flight ---- */
+let F=null,fscene=null;const fcam=new THREE.PerspectiveCamera(50,1,.1,700);
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function planetTex(kind){return tex(x=>{const r=rng(kind.length*977+kind.charCodeAt(0)),base={earth:'#1d4f9c',moon:'#a19f9b',mars:'#b4522e',europa:'#d9d3c4'}[kind];x.fillStyle=base;x.fillRect(0,0,512,256);
+ if(kind==='earth'){for(let i=0;i<70;i++){x.fillStyle=r()<.8?'#3f8f4e':'#a79a5c';x.beginPath();x.ellipse(r()*512,40+r()*176,10+r()*34,6+r()*20,r()*3,0,6.28);x.fill();}for(let i=0;i<60;i++){x.fillStyle='rgba(255,255,255,.35)';x.beginPath();x.ellipse(r()*512,r()*256,20+r()*40,3+r()*7,0,0,6.28);x.fill();}x.fillStyle='#eef4fb';x.fillRect(0,0,512,14);x.fillRect(0,242,512,14);}
+ else if(kind==='moon'){for(let i=0;i<140;i++){const rr=3+r()*16,cx=r()*512,cy=r()*256;x.fillStyle='rgba(70,68,66,.5)';x.beginPath();x.arc(cx,cy,rr,0,6.28);x.fill();x.strokeStyle='rgba(220,218,214,.45)';x.beginPath();x.arc(cx-1,cy-1,rr,0,6.28);x.stroke();}}
+ else if(kind==='mars'){for(let i=0;i<60;i++){x.fillStyle=r()<.5?'rgba(110,40,20,.45)':'rgba(220,150,100,.35)';x.beginPath();x.ellipse(r()*512,r()*256,10+r()*40,6+r()*18,r()*3,0,6.28);x.fill();}x.fillStyle='#f1ece6';x.fillRect(0,0,512,10);x.fillRect(0,246,512,10);}
+ else{x.strokeStyle='rgba(140,90,60,.55)';x.lineWidth=2;for(let i=0;i<40;i++){x.beginPath();x.moveTo(r()*512,r()*256);x.quadraticCurveTo(r()*512,r()*256,r()*512,r()*256);x.stroke();}}},512,256);}
+function planet(kind,rad){return new THREE.Mesh(new THREE.SphereGeometry(rad,40,28),new THREE.MeshStandardMaterial({map:planetTex(kind),roughness:1,metalness:0}));}
+function bez(a,c,b,u){const v=1-u;return new THREE.Vector3(v*v*a.x+2*v*u*c.x+u*u*b.x,v*v*a.y+2*v*u*c.y+u*u*b.y,v*v*a.z+2*v*u*c.z+u*u*b.z);}
+function plumeFor(ev){const k=ev.eng.id,cfg=k==='ion'?{r:.14,l:2.4,c:'#7fb8ff'}:k==='ntr'?{r:.5,l:3.6,c:'#d3a6ff'}:{r:.45,l:3,c:'#ffa14a'};
+ const m=new THREE.Mesh(new THREE.ConeGeometry(cfg.r,cfg.l,16,1,true),new THREE.MeshBasicMaterial({color:cfg.c,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=Math.PI;m.position.y=-cfg.l/2-.05;return m;}
+function startFlight(){closeModal();const ev=evaluate(),out=outcome(ev),ms=ev.ms;if(ev.n===0){toast('Build something first.');return;}
+ playSfx('launch');
+ mode='flight';document.body.classList.add('flight');['hint','selbar','brief'].forEach(i=>{if($(i))$(i).hidden=(i!=='brief');});$('hint').hidden=true;$('fhud').hidden=false;$('flog').hidden=false;$('flog').innerHTML='';$('btnAbort').hidden=false;
+ const sc=new THREE.Scene();sc.background=new THREE.Color('#04060b');sc.add(new THREE.AmbientLight(0xffffff,.35));const sun=new THREE.DirectionalLight(0xfff2dc,1.5);sun.position.set(-60,25,40);sc.add(sun);
+ const a=[];for(let i=0;i<900;i++){const r=300+Math.random()*100,t=Math.random()*6.28,u=Math.acos(2*Math.random()-1);a.push(r*Math.sin(u)*Math.cos(t),r*Math.cos(u),r*Math.sin(u)*Math.sin(t));}
+ const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(a,3));sc.add(new THREE.Points(sg,new THREE.PointsMaterial({color:'#b9c9ee',size:1.1})));
+ const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(x=>{const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,248,220,1)');g.addColorStop(.25,'rgba(255,214,140,.55)');g.addColorStop(1,'rgba(255,200,120,0)');x.fillStyle=g;x.fillRect(0,0,128,128);},128,128),blending:THREE.AdditiveBlending,depthWrite:false}));glow.position.set(-200,70,-150);glow.scale.setScalar(160/Math.pow(ms.au,.7));sc.add(glow);
+ const E=new THREE.Vector3(-34,-6,0),earth=planet('earth',7);earth.position.copy(E);sc.add(earth);
+ const atm=new THREE.Mesh(new THREE.SphereGeometry(7.4,32,20),new THREE.MeshBasicMaterial({color:'#5aa2ff',transparent:true,opacity:.16,side:THREE.BackSide,blending:THREE.AdditiveBlending}));atm.position.copy(E);sc.add(atm);
+ const T=new THREE.Vector3(ms.x,3,-6),tg=planet(ms.tex,ms.r);tg.position.copy(T);sc.add(tg);
+ if(ms.id==='europa'){const j=new THREE.Mesh(new THREE.SphereGeometry(22,40,28),new THREE.MeshStandardMaterial({color:'#c9a67a',roughness:1}));j.position.set(T.x+24,T.y+4,T.z-50);sc.add(j);}
+ const R=ms.r+3.2,orb=a2=>new THREE.Vector3(T.x+R*Math.cos(a2),T.y+R*Math.sin(a2)*.3,T.z+R*Math.sin(a2));
+ const P0=new THREE.Vector3(E.x+9,E.y+14,0),T0=orb(Math.PI),A0=new THREE.Vector3(E.x,E.y+7.2,0),Cl=new THREE.Vector3(E.x+1,E.y+17,0);
+ const Ct=new THREE.Vector3((P0.x+T0.x)/2,Math.max(P0.y,T0.y)+16,12);
+ const path=[];for(let i=0;i<=40;i++)path.push(bez(P0,Ct,T0,i/40));sc.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(path),new THREE.LineBasicMaterial({color:'#5fd3c8',transparent:true,opacity:.35})));
+ const b=buildShipGroup(false),pivot=new THREE.Group();b.grp.position.y=-b.H/2;pivot.add(b.grp);pivot.scale.setScalar(.32);const plume=ev.eng?plumeFor(ev):new THREE.Group();plume.position.y-=b.H/2;pivot.add(plume);sc.add(pivot);
+ const debris=[];
+ const events=[];const ad=(at,t,k)=>events.push({at,t,k,done:false});
+ const ion=ev.eng&&ev.eng.id==='ion';
+ ad(.1,ion?(ev.f<1?'Ion engine running at '+Math.round(ev.f*100)+'% thrust because power is limited.':'Ion engine firing at full power.'):'Departure burn complete.',ion&&ev.f<1?'warn':'good');
+ ad(.3,ev.gen<ev.base?'Brownout! '+fmt(ev.gen)+' W available for a '+fmt(ev.base)+' W load.':'Power stable: '+fmt(ev.gen)+' W for '+fmt(ev.base)+' W of load.',ev.gen<ev.base?'bad':'good');
+ if(ms.shield>0)ad(.45,ev.shield<ms.shield?(ms.crew?'Solar storm! Shielding '+ev.shield+' is too low. The crew takes a dangerous dose.':'Solar storm! Shielding '+ev.shield+' is too low. Electronics are damaged.'):'Solar storm. Shielding held.',ev.shield<ms.shield?'bad':'good');
+ ad(.6,ev.heat>ev.cool?'Overheating: '+fmt(ev.heat)+' W of heat, only '+fmt(ev.cool)+' W of cooling.':'Thermal system keeping cool.',ev.heat>ev.cool?'bad':'good');
+ ad(.72,ev.batt<ev.eclipseWh?'Eclipse shadow! Battery depleted ('+fmt(ev.batt)+' Wh < '+fmt(ev.eclipseWh)+' Wh needed).':'Eclipse shadow: batteries held ('+fmt(ev.batt)+' Wh).',ev.batt<ev.eclipseWh?'bad':'good');
+ ad(.88,ev.comms<ms.comms?'Antenna too weak to reach Earth from here.':'Data link to Earth locked ('+COMMS[ev.comms]+').',ev.comms<ms.comms?'bad':'good');
+ F={ev,out,ms,sc,pivot,plume,earth,tg,T,E,P0,T0,A0,Cl,Ct,orb,debris,events,t:0,done:false,cap:out.reach>=1?1:Math.max(.02,out.reach*.9),dvAvail:ev.dv,exploded:false,cpos:new THREE.Vector3(E.x+10,E.y+12,12),sciNow:0,fin:0};
+ resize();}
+function flog(t,k){const l=$('flog'),d=document.createElement('div');d.className=k||'';d.textContent=t;l.appendChild(d);while(l.children.length>4)l.removeChild(l.firstChild);}
+function aim(dir){F.pivot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());}
+function updateFlight(dt){if(!F)return;const ion=!!(F.ev.eng&&F.ev.eng.id==='ion');F.t+=dt;const t=F.t,o=F.out,ms=F.ms,TL=5,TT=14,TS=7;let pos,dir,burn=false,phase='Launch',p=0;
+ if(!o.launchOk){const u=Math.min(1,t/(TL*.55));pos=bez(F.A0,F.Cl,F.P0,u*.5);dir=new THREE.Vector3(0,1,0);burn=!F.exploded;phase='Launch';
+  if(t>TL*.55&&!F.exploded){F.exploded=true;F.gameOverPlayed=true;playSfx('gameover');F.pivot.visible=false;flog(o.launchWhy,'bad');for(let i=0;i<30;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.25,.25,.25),new THREE.MeshBasicMaterial({color:i%2?'#ffa14a':'#dfe5ee'}));m.position.copy(pos);m.v=new THREE.Vector3(Math.random()-.5,Math.random()-.2,Math.random()-.5).multiplyScalar(8);F.sc.add(m);F.debris.push(m);}}
+  F.debris.forEach(m=>{m.position.addScaledVector(m.v,dt);m.rotation.x+=dt*3;});phase=F.exploded?'Launch failure':'Launch';
+  if(t>TL+2&&!F.done)finishFlight();}
+ else if(t<TL){const u=t/TL;pos=bez(F.A0,F.Cl,F.P0,u*u);dir=bez(F.A0,F.Cl,F.P0,Math.min(1,u*u+.02)).sub(pos);burn=true;phase='Launch';}
+ else if(t<TL+TT||(F.stalled&&!F.done)){const u=clamp((t-TL)/TT,0,1),sm=u*u*(3-2*u);p=Math.min(sm,F.cap);const stall=sm>=F.cap&&F.cap<1;pos=bez(F.P0,F.Ct,F.T0,p);dir=bez(F.P0,F.Ct,F.T0,Math.min(1,p+.02)).sub(pos);
+  burn=ion?F.ev.thrust>0&&!stall:(p<.1||p>.9)&&!stall;phase=p<.1?'Departure burn':p>.9?'Orbit insertion':'Cruise';
+  if(stall){phase='Out of propellant';if(!F.stalled){F.stalled=true;F.stallT=t;F.gameOverPlayed=true;playSfx('gameover');flog('Out of propellant after '+Math.round(F.cap/.9*100)+'% of the delta-v needed. The ship drifts.','bad');}if(t-F.stallT>2.5&&!F.done)finishFlight();}
+  F.events.forEach(e=>{if(!e.done&&p>=e.at){e.done=true;flog(e.t,e.k);if(e.k==='warn'||e.k==='bad')playSfx('warning');}});}
+ else{const u=clamp((t-TL-TT)/TS,0,1);if(!F.arr){F.arr=true;flog('Orbit achieved around '+ms.body+'. Science begins.','good');}phase='Science orbit';p=1;
+  const ang=Math.PI+u*Math.PI*3;pos=F.orb(ang);dir=F.orb(ang+.05).sub(pos);F.sciNow=F.out.sciRet*u;if(u>=1&&!F.done)finishFlight();}
+ F.pivot.position.copy(pos);aim(dir);F.plume.visible=burn;if(burn)F.plume.scale.set(1,.85+Math.random()*.3,1);
+ F.earth.rotation.y+=dt*.05;
+ const d=dir.clone().normalize(),want=pos.clone().addScaledVector(d,-6).add(new THREE.Vector3(2,2.5,6));F.cpos.lerp(want,.05);fcam.position.copy(F.cpos);fcam.lookAt(pos.clone().addScaledVector(d,1.5));
+ $('fPhase').textContent=phase;$('fDay').textContent=Math.round(p*ms.days);const used=Math.min(F.dvAvail,ms.dv*p);$('fDv').textContent=fmt(Math.max(0,F.dvAvail-used));$('fPow').textContent=fmt(F.ev.gen)+'/'+fmt(F.ev.base)+' W';$('fSci').textContent=Math.round(F.sciNow)+'/'+ms.science;
+ renderer.render(F.sc,fcam);}
+function finishFlight(){F.done=true;S.flight=F.out;setTimeout(()=>{if(mode==='flight')showResults(F.out);},900);}
+function endFlight(){mode='build';document.body.classList.remove('flight');if(F){disposeTree(F.sc);F=null;}$('fhud').hidden=true;$('flog').hidden=true;$('btnAbort').hidden=true;$('hint').hidden=false;closeModal();refresh();}
+
+/* ---- Modals, results, reviews ---- */
+function closeModal(){if(typeof cosmoT!=='undefined'&&cosmoT){clearInterval(cosmoT);cosmoT=null;}$('modal').hidden=true;}
+function openModal(html){$('sheet').innerHTML=html;$('modal').hidden=false;const b=$('sheet').querySelector('button');if(b)b.focus();}
+$('modal').addEventListener('pointerdown',e=>{if(e.target===$('modal'))closeModal();});
+function quickReview(ev){const bad=ev.checks.filter(c=>!c.ok),top=allParts().slice().sort((a,b)=>b.cost-a.cost).slice(0,2);
+ let h='<p><b>'+(ev.checks.length-bad.length)+' of '+ev.checks.length+'</b> requirements met.</p>';
+ if(!ev.hasCmd||!ev.hasEng||ev.prop<=0)h+='<p>The ship needs a command module on top, an engine at the bottom and at least one propellant tank.</p>';
+ h+=bad.length?'<ul>'+bad.map(c=>'<li><b>'+esc(c.label)+':</b> '+esc(c.advice)+'</li>').join('')+'</ul>':'<p>Every requirement is met. Look for savings in mass and cost to raise your score.</p>';
+ if(top.length)h+='<p>Most expensive parts: '+top.map(p=>esc(p.name)+' ($'+p.cost+'M)').join(', ')+'.</p>';return h;}
+function showResults(o){if(o.success)playSfx('winning');else if(!(F&&F.gameOverPlayed))playSfx('gameover');const ev=o.ev,ms=ev.ms;
+ let head=o.success?'Mission success':(o.launchOk?'Mission not completed':'Mission failed');
+ let bCls=o.success?'ok':(o.launchOk?'warn':'');
+ let why=o.launchOk?(o.reach<1?'The ship ran out of delta-v ('+fmt(ev.dv)+' of '+fmt(ms.dv)+' m/s).':(o.crewLost?'The crew was lost to radiation.':'')):o.launchWhy;
+ const pct=c=>{if(c.have===null||!isFinite(c.have))return 0;if(c.more)return c.need>0?clamp(c.have/c.need,0,1)*100:(c.ok?100:0);return c.need>0?clamp(c.have/c.need,.06,1)*100:0;};
+ const starsHtml=[0,1,2].map(i=>'<span class="'+(i<o.stars?'on':'')+'">&#9733;</span>').join('');
+ const sciIcon='<svg viewBox="0 0 36 36" fill="none"><circle cx="15" cy="16" r="9" fill="#3a6bc4"/><ellipse cx="15" cy="16" rx="14" ry="4.5" transform="rotate(-22 15 16)" stroke="#70e4d9" stroke-width="2"/><path d="M22 18h5l2.5 8.5a2 2 0 0 1-1.9 2.5h-6.2a2 2 0 0 1-1.9-2.5L22 18z" fill="#42cc84" stroke="#b9f5d8" stroke-width="1.3"/></svg>';
+ const critIcon='<svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2c3 3 4 7 4 11l3 3v2l-4-1.5L12 19l-3-2.5L5 18v-2l3-3c0-4 1-8 4-11z" fill="#9fb0d1"/></svg><span class="x">&#10005;</span>';
+ const cards=ev.checks.map(c=>{
+  const p=Math.round(pct(c));
+  return '<div class="rpt-card '+(c.ok?'ok':'no')+'"><div class="rpt-ch"><span class="rpt-ic">'+(c.ok?'&#10003;':'&#10005;')+'</span><span>'+esc(c.label)+'</span></div>'+
+   '<div class="rpt-val">'+esc(c.h)+'</div>'+
+   '<div class="rpt-bar"><i style="width:'+p+'%"></i></div>'+
+   (!c.ok?'<div class="rpt-miss">'+esc(c.n)+'</div>':'')+
+   '<div class="rpt-need">Need '+esc(c.n)+'</div></div>';
+ }).join('');
+ openModal('<div class="rpt">'+
+  '<div class="rpt-head"><div class="rpt-badge '+bCls+'">'+esc(head)+'</div></div>'+
+  '<div class="rpt-top">'+
+   '<div class="rpt-box rpt-rate"><div class="rpt-lbl">Overall rating</div><div class="rpt-stars">'+starsHtml+'</div></div>'+
+   '<div class="rpt-box rpt-score"><div><div class="rpt-lbl">Final score</div><div class="rpt-big">'+o.score+' <span>/ 100</span></div></div><div class="rpt-sci">'+sciIcon+'<div><b>Science</b><small>'+Math.round(o.sciRet)+' (target '+ms.science+')</small></div></div></div>'+
+  '</div>'+
+  '<div class="rpt-grid">'+cards+'</div>'+
+  (why?'<div class="rpt-crit"><div class="rpt-crit-ic">'+critIcon+'</div><div><b>Critical failures</b><span>'+esc(why)+'</span></div></div>':'')+
+  '<div class="rpt-acts"><button class="btn primary" id="rAI">&#129302; Ask AI engineer</button>'+(o.success?'<button class="btn primary" id="rCert">&#127942; Certificate</button>':'<button class="btn" id="rAgain">Fly again</button>')+'<button class="btn" id="rBack">Back to workshop</button></div>'+
+  '<div id="aiOut"></div></div>');
+ if(o.success){PROG.missions++;saveProg();unlockAch('orbit');if(ev.bal>=90)unlockAch('bal');if(ev.eng&&ev.eng.id==='ion')unlockAch('ion');if(o.stars>=3)unlockAch('eff');if($('rCert'))$('rCert').onclick=()=>showCertificate(o);}
+ if($('rAgain'))$('rAgain').onclick=()=>{endFlight();startFlight();};
+ $('rAI').onclick=()=>runAI(o);$('rBack').onclick=endFlight;}
+function reviewPrompt(ev,o){const ms=ev.ms,sn=s=>({1:'R','-1':'L',2:'F','-2':'B'}[s]||'R'),parts=S.stack.map((m,i)=>(i+1)+'. '+P[m.id].name+(m.att.length?' [sides: '+m.att.map(a=>P[a.id].name+' '+sn(a.side)).join(', ')+']':'')).join('\n');
+ return'You are a friendly mission design reviewer coaching a student (age 12-18) in a spaceship building game based on the NASA Space Apps Challenge 2026 "Space Mission Design Game", which teaches trade-offs between mass, budget, power, communications, delta-v, launch vehicle choice and instruments.\n\nMission: '+ms.name+' ('+ms.blurb+')\nLauncher: '+ev.ln.name+'\nShip, top to bottom:\n'+(parts||'(empty)')+'\n\nRequirement checks (have vs need):\n'+ev.checks.map(c=>'- '+c.label+': '+c.h+' vs '+c.n+' => '+(c.ok?'OK':'FAIL')).join('\n')+'\nDry mass '+fmt(ev.dry)+' kg, launch mass '+fmt(ev.m0)+' kg.'+(o?'\nTest flight: '+(o.success?'success':'failed')+', score '+o.score+'/100'+(o.launchWhy?', '+o.launchWhy:'')+'.':'')+
+ '\n\nWrite under 180 words with exactly three headings on their own lines: What works, Fix first, Try next. Under each give 1-3 bullets starting with "- ". Name parts from the list and use only the numbers above. Give hints and one short why, not a full redesign. No emojis.';}
+function fmtAI(t){const lines=esc(t).split('\n');let h='',open=false;lines.forEach(l=>{l=l.trim();if(!l)return;const hd=/^(?:\*\*|#+\s*)?(What works|Fix first|Try next)/i.exec(l);if(hd){if(open){h+='</ul>';open=false;}h+='<h4>'+hd[1]+'</h4>';return;}
+ if(/^[-*]\s/.test(l)){if(!open){h+='<ul>';open=true;}h+='<li>'+l.replace(/^[-*]\s/,'').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')+'</li>';}else{if(open){h+='</ul>';open=false;}h+='<p>'+l.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')+'</p>';}});return h+(open?'</ul>':'');}
+let SAMPLE=null,aiBusy=false;
+async function runAI(o){const out=$('aiOut');if(!out)return;if(!SAMPLE){out.innerHTML='<div class="ai">The AI engineer works when this page is opened inside Claude. The instant check above still applies.</div>';return;}
+ if(aiBusy)return;aiBusy=true;out.innerHTML='<div class="ai">Reviewing your design...</div>';
+ try{const ev=o?o.ev:(S.last||evaluate());const r=await SAMPLE(reviewPrompt(ev,o||S.flight||null),{modelTier:'quick',cache:false,onText:({text})=>{out.innerHTML='<div class="ai">'+fmtAI(text)+'</div>';}});out.innerHTML='<div class="ai">'+fmtAI(r.text)+'</div>';}
+ catch(e){out.innerHTML='<div class="ai">'+(e&&e.code==='not_granted'?'The review was not allowed. You can try again when you are ready.':'The AI engineer could not answer right now. Try again in a moment.')+'</div>';}aiBusy=false;}
+function analyzeDesign(ev){
+ const ms=ev.ms,subs=[
+  {name:'Structure & Mass',score:ev.hasCmd&&ev.m0<=ev.ln.cap?Math.round(clamp(100-Math.max(0,(ev.m0/ev.ln.cap-.75)*40),55,100)):(ev.hasCmd?35:0),note:fmt(ev.m0)+' / '+fmt(ev.ln.cap)+' kg'},
+  {name:'Power & Battery',score:Math.round((ev.base>0?clamp(ev.gen/ev.base,0,1):1)*60+(ev.eclipseWh>0?clamp(ev.batt/ev.eclipseWh,0,1):1)*40),note:fmt(ev.gen)+' W, '+fmt(ev.batt)+' Wh'},
+  {name:'Propulsion & Delta-v',score:ev.hasEng&&ev.prop>0?Math.round(clamp(ev.dv/ms.dv,0,1)*85+(ev.burnDays<=ms.days?15:0)):0,note:fmt(ev.dv)+' / '+fmt(ms.dv)+' m/s'},
+  {name:'Thermal Control',score:ev.cool>=ev.heat?100:Math.round(clamp(ev.cool/Math.max(1,ev.heat),0,1)*100),note:fmt(ev.heat)+' / '+fmt(ev.cool)+' W'},
+  {name:'Communications',score:ev.comms>=ms.comms?100:Math.round(ev.comms/Math.max(1,ms.comms)*80),note:COMMS[ev.comms]},
+  {name:'Stability & Balance',score:ev.bal,note:ev.bal+'% (need '+ev.df.balNeed+'%)'},
+  {name:'Science Payload',score:Math.round(clamp(ev.sci/Math.max(1,ms.science*.6),0,1)*100),note:ev.sci+' pts'}
+ ];
+ const effBonus=ev.cost<=ev.budgetCap?Math.round(clamp((ev.budgetCap-ev.cost)/ev.budgetCap,0,.25)*20):0;
+ const readiness=Math.round(clamp(subs.reduce((s,x)=>s+x.score,0)/subs.length+effBonus,0,100));
+ const missing=[];if(!ev.hasCmd)missing.push('Command Module (Probe Core or Crew Capsule)');if(!ev.hasEng)missing.push('Engine (Chemical, Ion, or Nuclear Thermal)');if(ev.prop<=0)missing.push('Propellant Tank');if(ev.comms<ms.comms)missing.push(COMMS[ms.comms]+' Antenna');if(ms.crew>0&&ev.crew<ms.crew)missing.push('Crew Capsule');
+ const bad=ev.checks.filter(c=>!c.ok);
+ return{subs,readiness,missing,bad};
+}
+function showReview(){
+ const ev=evaluate(),an=analyzeDesign(ev);
+ const subHTML=an.subs.map(s=>'<div class="subcard"><div class="sh"><span>'+esc(s.name)+'</span><b style="color:'+(s.score>=80?'var(--good)':s.score>=50?'var(--warn)':'var(--bad)')+'">'+s.score+'%</b></div><small style="color:var(--muted)">'+esc(s.note)+'</small></div>').join('');
+ openModal('<h2>Engineering Design Review</h2>'+
+  '<div class="cmp-kv"><span>Overall Mission Readiness ('+esc(ev.df.label)+')</span><b>'+an.readiness+' / 100</b></div>'+
+  '<div class="cmp-kv"><span>Acceleration / TWR</span><b>'+(ev.accel>0?ev.accel.toFixed(2)+' m/s&sup2;':'0 m/s&sup2;')+'</b></div>'+
+  '<h3>Subsystem Scores</h3><div class="subgrid">'+subHTML+'</div>'+
+  (an.missing.length?'<h3>Missing Components</h3><ul>'+an.missing.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul>':'')+
+  '<h3>Engineering Problems &amp; Suggested Improvements</h3>'+
+  (an.bad.length?'<ul>'+an.bad.map(c=>'<li><b>'+esc(c.label)+':</b> '+esc(c.advice)+'</li>').join('')+'</ul>':'<p style="color:var(--good)">All mission constraints are satisfied! Try trimming mass or cost for higher efficiency.</p>')+
+  '<h3>Physics &amp; Approximation Notes</h3><p>Uses Tsiolkovsky rocket equation (&Delta;v = I<sub>sp</sub>&middot;g<sub>0</sub>&middot;ln(m<sub>0</sub>/m<sub>dry</sub>)), inverse-square solar flux (1/AU&sup2;), and simplified lumped thermal/eclipse models for educational clarity.</p>'+
+  '<div class="acts"><button class="btn primary" id="rAI">Ask AI engineer</button><button class="btn" id="rClose">Close</button></div><div id="aiOut"></div>');
+ $('rAI').onclick=()=>runAI(null);$('rClose').onclick=closeModal;}
+function showGuide(){openModal('<h2>How Orbitix works</h2><p>Pick a mission and a launcher, then drag parts onto the platform. Command modules snap to the top, engines to the bottom, tanks and bays in between. Solar wings, antennas, radiators and instruments snap to the sides. Drag a placed part off the platform to remove it, or drag across the platform to rotate the view. Press Launch test to fly your ship.</p>'+
+ '<h3>Delta-v and the rocket equation</h3><p>How far a ship can go is its delta-v: exhaust speed times ln(launch mass / dry mass). Propellant adds delta-v but also adds mass for the launcher to lift. A higher Isp engine gets more out of each kilogram.</p>'+
+ '<h3>Power</h3><p>Sunlight falls with the square of distance. At Mars solar wings give 43% of their Earth output, at Jupiter about 4%, so outer missions need RTGs.</p>'+
+ '<h3>Heat, radiation and communications</h3><p>Every watt used becomes heat that radiators must shed. Solar storms and Jupiter\'s belts need shielding. Farther planets need bigger antennas to send data home.</p>'+
+ '<h3>The challenge</h3><p>This game follows the NASA Space Apps Challenge 2026 brief: design a spacecraft and payload, manage limited mass, budget, power and communications, choose a launch vehicle, and see how decisions affect mission success. Numbers here are simplified for learning. <a href="https://www.spaceappschallenge.org/2026/challenges/space-mission-design-game/" target="_blank" rel="noopener">Open the challenge page</a>.</p><div class="acts"><button class="btn primary" id="gClose">Got it</button></div>');$('gClose').onclick=closeModal;}
+function prosCons(p){
+ const pros=[],cons=[];
+ if(p.prop)pros.push('Carries '+fmt(p.prop)+' kg of propellant for more delta-v');
+ if(p.isp>=2000)pros.push('Ultra-high efficiency (Isp '+p.isp+' s) saves propellant');
+ else if(p.isp>=450)pros.push('High efficiency (Isp '+p.isp+' s)');
+ if(p.thrust>=10000)pros.push('High thrust ('+(p.thrust/1000)+' kN) for fast burns');
+ if(p.solar)pros.push('Generates +'+fmt(p.solar)+' W at 1 AU without fuel');
+ if(p.gen)pros.push('Reliable +'+p.gen+' W anywhere in the solar system');
+ if(p.cool)pros.push('Sheds '+fmt(p.cool)+' W of waste heat');
+ if(p.comms===3)pros.push('Deep-space High-gain link (outer planets)');
+ else if(p.comms===2)pros.push('Medium-gain link (reaches Mars)');
+ else if(p.comms===1)pros.push('Simple, ultra-light Low-gain link');
+ if(p.science)pros.push('Adds +'+p.science+' science output');
+ if(p.shield)pros.push('Adds +'+p.shield+' radiation shielding');
+ if(p.crew)pros.push('Supports '+p.crew+' astronauts');
+ if(p.cost<=8)pros.push('Very budget-friendly ($'+p.cost+'M)');
+ if(p.mass<=45)pros.push('Very lightweight ('+p.mass+' kg)');
+ if(!pros.length)pros.push('Essential structural/core module');
+ if(p.power<0)cons.push('Draws '+fmt(-p.power)+' W power (adds heat load)');
+ if(p.solar)cons.push('Drops sharply far from Sun (43% Mars, 4% Jupiter)');
+ if(p.thrust>0&&p.thrust<100)cons.push('Very low thrust ('+p.thrust+' N) means slow burns');
+ if(p.isp>0&&p.isp<350)cons.push('Lower Isp ('+p.isp+' s) burns more propellant');
+ if(p.cost>=30)cons.push('High cost ($'+p.cost+'M of budget)');
+ if(p.mass>=250)cons.push('Heavy ('+fmt(p.mass)+' kg launch mass)');
+ if(p.comms===1)cons.push('Too weak beyond the Moon');
+ if(p.role==='command'&&!p.crew)cons.push('Cannot carry human crew');
+ if(!cons.length)cons.push('Occupies a build/attachment slot');
+ return{pros,cons};
+}
+let cosmoT=null;
+function cosmoGuideHTML(){
+ return '<div class="cosmo-guide"><svg class="cosmo-av" viewBox="20 -16 160 150" aria-hidden="true">'+
+  '<defs><linearGradient id="vg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b2f86"/><stop offset="1" stop-color="#120d2e"/></linearGradient></defs>'+
+  '<line x1="100" y1="8" x2="100" y2="-10" stroke="#c3cde0" stroke-width="3"/><circle cx="100" cy="-12" r="5" fill="#f0a04b"/>'+
+  '<circle cx="42" cy="70" r="9" fill="#5fd3c8"/><circle cx="158" cy="70" r="9" fill="#5fd3c8"/>'+
+  '<circle cx="100" cy="66" r="58" fill="#f4f7fc" stroke="#c3cde0" stroke-width="3"/>'+
+  '<ellipse cx="100" cy="68" rx="44" ry="38" fill="url(#vg2)"/>'+
+  '<ellipse cx="86" cy="72" rx="4" ry="5" fill="#7fe8dc"/><ellipse cx="114" cy="72" rx="4" ry="5" fill="#7fe8dc"/>'+
+  '<ellipse id="cmouth" cx="100" cy="87" rx="6" ry="2.5" fill="#7fe8dc"/></svg>'+
+  '<div class="cosmo-msg"><b>Cosmo &middot; Flight Guide</b><p id="cmsg"></p></div></div>';
+}
+function cosmoSpeak(text){
+ if(cosmoT){clearInterval(cosmoT);cosmoT=null;}
+ const el=$('cmsg'),mo=$('cmouth');if(!el)return;
+ if(reduce){el.textContent=text;return;}
+ let n=0;el.textContent='';
+ cosmoT=setInterval(()=>{
+  n+=3;el.textContent=text.slice(0,n);
+  if(mo)mo.setAttribute('ry',(2+Math.abs(Math.sin(n*.6))*3.5).toFixed(1));
+  if(n%9===3&&/[a-zA-Z0-9]/.test(text[n-1]||''))talkBlip();
+  if(n>=text.length){clearInterval(cosmoT);cosmoT=null;if(mo)mo.setAttribute('ry','2.5');}
+ },22);
+}
+function showPartInfo(p){
+ const pc=prosCons(p);
+ openModal('<h2>'+esc(p.name)+'</h2>'+cosmoGuideHTML()+
+  '<div class="cmp-kv"><span>Price</span><b>$'+p.cost+'M</b></div>'+
+  '<div class="cmp-kv"><span>Mass</span><b>'+fmt(p.mass)+' kg</b></div>'+
+  '<div class="cmp-kv"><span>Specs</span><b>'+esc(facts(p).slice(2).join(' · ')||'Core part')+'</b></div>'+
+  '<h3>Advantages</h3><ul class="cmp-list">'+pc.pros.map(x=>'<li class="pro">'+esc(x)+'</li>').join('')+'</ul>'+
+  '<h3>Disadvantages</h3><ul class="cmp-list">'+pc.cons.map(x=>'<li class="con">'+esc(x)+'</li>').join('')+'</ul>'+
+  '<div class="acts"><button class="btn primary" id="pCmp">Compare with another piece</button><button class="btn" id="pClose">Close</button></div>');
+ cosmoSpeak('Hey engineer! Here is the '+p.name+'. '+p.desc+' It costs $'+p.cost+'M and weighs '+fmt(p.mass)+' kg. Key advantage: '+pc.pros[0]+'. Watch out: '+pc.cons[0]+'.');
+ $('pCmp').onclick=()=>showCompare(p.id);$('pClose').onclick=()=>{if(cosmoT){clearInterval(cosmoT);cosmoT=null;}closeModal();};
+}
+let savedDesigns={A:null,B:null};
+function snapshotDesign(){const ev=evaluate(),an=analyzeDesign(ev);return{name:ev.ms.name+' ('+ev.ln.name+')',ev,readiness:an.readiness};}
+function showCompare(aId,bId,tab){
+ const modeTab=tab||'pieces';
+ if(modeTab==='designs'){
+  const cur=snapshotDesign(),a=savedDesigns.A||cur,b=savedDesigns.B||cur;
+  const better=a.readiness===b.readiness?'Both designs have equal mission readiness ('+a.readiness+'/100).':
+   (a.readiness>b.readiness?'Design A':'Design B')+' performs better ('+Math.max(a.readiness,b.readiness)+'/100 vs '+Math.min(a.readiness,b.readiness)+'/100) due to '+
+   (a.ev.checks.filter(c=>c.ok).length!==b.ev.checks.filter(c=>c.ok).length?'meeting more mission requirements.':'better mass/cost efficiency.');
+  const dcol=(lbl,d)=>'<div class="cmp-col"><h3>'+esc(lbl)+'</h3>'+
+   '<div class="cmp-kv"><span>Readiness</span><b>'+d.readiness+' / 100</b></div>'+
+   '<div class="cmp-kv"><span>Launch Mass</span><b>'+fmt(d.ev.m0)+' kg</b></div>'+
+   '<div class="cmp-kv"><span>Delta-v</span><b>'+fmt(d.ev.dv)+' m/s</b></div>'+
+   '<div class="cmp-kv"><span>Power / Load</span><b>'+fmt(d.ev.gen)+' / '+fmt(d.ev.base)+' W</b></div>'+
+   '<div class="cmp-kv"><span>Battery</span><b>'+fmt(d.ev.batt)+' Wh</b></div>'+
+   '<div class="cmp-kv"><span>Comms</span><b>'+COMMS[d.ev.comms]+'</b></div>'+
+   '<div class="cmp-kv"><span>Balance</span><b>'+d.ev.bal+'%</b></div>'+
+   '<div class="cmp-kv"><span>Cost</span><b>$'+fmt(d.ev.cost)+'M</b></div></div>';
+  openModal('<h2>Compare</h2><div class="tabs"><button class="tab" id="tP">Compare Pieces</button><button class="tab on" id="tD">Compare Spacecraft Designs</button></div>'+
+   cosmoGuideHTML()+
+   '<div class="acts" style="margin:6px 0"><button class="btn" id="svA">Save Current as Design A</button><button class="btn" id="svB">Save Current as Design B</button></div>'+
+   '<div class="cmp-grid">'+dcol('Design A'+(savedDesigns.A?'':' (Current)'),a)+dcol('Design B'+(savedDesigns.B?'':' (Current)'),b)+'</div>'+
+   '<div class="acts"><button class="btn primary" id="cmpClose">Close</button></div>');
+  cosmoSpeak(better);
+  $('tP').onclick=()=>showCompare(aId,bId,'pieces');
+  $('svA').onclick=()=>{savedDesigns.A=snapshotDesign();toast('Saved current spacecraft as Design A');showCompare(aId,bId,'designs');};
+  $('svB').onclick=()=>{savedDesigns.B=snapshotDesign();toast('Saved current spacecraft as Design B');showCompare(aId,bId,'designs');};
+  $('cmpClose').onclick=closeModal;return;
+ }
+ const a=P[aId]||PARTS[0],b=P[bId]||(PARTS.find(x=>x.id!==a.id)||PARTS[1]);
+ const pa=prosCons(a),pb=prosCons(b);
+ const opts=sel=>PARTS.map(p=>'<option value="'+p.id+'"'+(p.id===sel.id?' selected':'')+'>'+esc(p.name)+' ($'+p.cost+'M, '+fmt(p.mass)+' kg)</option>').join('');
+ const costDiff=Math.abs(a.cost-b.cost),massDiff=Math.abs(a.mass-b.mass);
+ const col=(p,pc,other)=>'<div class="cmp-col"><h3>'+esc(p.name)+'</h3>'+
+  '<div class="cmp-kv"><span>Price</span><b class="'+(p.cost<other.cost?'win':'')+'">$'+p.cost+'M</b></div>'+
+  '<div class="cmp-kv"><span>Mass</span><b class="'+(p.mass<other.mass?'win':'')+'">'+fmt(p.mass)+' kg</b></div>'+
+  '<div class="cmp-kv"><span>Specs</span><b>'+esc(facts(p).slice(2).join(' · ')||'Core')+'</b></div>'+
+  '<ul class="cmp-list">'+pc.pros.map(x=>'<li class="pro">'+esc(x)+'</li>').join('')+pc.cons.map(x=>'<li class="con">'+esc(x)+'</li>').join('')+'</ul></div>';
+ const sum=a.id===b.id?'Pick two different pieces so I can compare them for you!':
+  'Comparing '+a.name+' vs '+b.name+': '+
+  (a.cost===b.cost?'both cost $'+a.cost+'M':(a.cost<b.cost?a.name:b.name)+' saves $'+costDiff+'M')+', and '+
+  (a.mass===b.mass?'both weigh '+fmt(a.mass)+' kg':(a.mass<b.mass?a.name:b.name)+' is '+fmt(massDiff)+' kg lighter')+'.';
+ openModal('<h2>Compare</h2><div class="tabs"><button class="tab on" id="tP">Compare Pieces</button><button class="tab" id="tD">Compare Spacecraft Designs</button></div>'+
+  cosmoGuideHTML()+'<div class="cmp-pick"><select id="cmpA">'+opts(a)+'</select><select id="cmpB">'+opts(b)+'</select></div>'+
+  '<div class="cmp-grid">'+col(a,pa,b)+col(b,pb,a)+'</div>'+
+  '<div class="acts"><button class="btn primary" id="cmpClose">Close</button></div>');
+ cosmoSpeak(sum);
+ $('tD').onclick=()=>showCompare(a.id,b.id,'designs');
+ $('cmpA').onchange=()=>$('cmpA').value&&showCompare($('cmpA').value,$('cmpB').value,'pieces');
+ $('cmpB').onchange=()=>$('cmpB').value&&showCompare($('cmpA').value,$('cmpB').value,'pieces');
+ $('cmpClose').onclick=closeModal;
+}
+
+/* ---- Interactive Linear Orbit Lab ---- */
+const MU_EARTH=3.986004418e14,R_EARTH_KM=6371;
+let orbitRaf=0;
+function orbitMetrics(altKm,ecc){
+ const rpKm=R_EARTH_KM+altKm,aKm=rpKm/(1-ecc),aM=aKm*1000,rpM=rpKm*1000,raM=aM*(1+ecc);
+ const vCirc=Math.sqrt(MU_EARTH/rpM)/1000;
+ const vPeri=Math.sqrt(MU_EARTH*(2/rpM-1/aM))/1000;
+ const vApo=Math.sqrt(MU_EARTH*(2/raM-1/aM))/1000;
+ const periodMin=2*Math.PI*Math.sqrt(Math.pow(aM,3)/MU_EARTH)/60;
+ const grav=MU_EARTH/(rpM*rpM);
+ return{altKm,ecc,aKm,raKm:raM/1000,vCirc,vPeri,vApo,periodMin,grav};
+}
+function showOrbitLab(){
+ if(orbitRaf){cancelAnimationFrame(orbitRaf);orbitRaf=0;}
+ openModal('<h2>Linear Orbit &amp; Orbital Mechanics Lab</h2>'+
+  '<p>Explore how orbital altitude and eccentricity control orbital speed, period, and mission design (idealized two-body Keplerian model).</p>'+
+  '<div class="orbit-wrap"><div><canvas class="orbit-cv" id="orbCv"></canvas>'+
+  '<div class="acts" style="margin-top:8px"><button class="btn" id="oLeo">LEO (400 km)</button><button class="btn" id="oMeo">MEO (20,200 km)</button><button class="btn" id="oGeo">GEO (35,786 km)</button></div></div>'+
+  '<div class="orbit-ctrl">'+
+   '<label>Periapsis Altitude: <b id="oAltV">400</b> km<input id="oAlt" type="range" min="200" max="40000" step="100" value="400"></label>'+
+   '<label>Eccentricity (0 = Circular, &gt;0 = Elliptical): <b id="oEccV">0.00</b><input id="oEcc" type="range" min="0" max="0.55" step="0.01" value="0"></label>'+
+   '<div id="oStats"></div>'+
+  '</div></div>'+
+  '<div class="acts"><button class="btn primary" id="oClose">Close</button></div>');
+ const cv=$('orbCv'),or=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+ or.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+ const osc=new THREE.Scene();osc.background=new THREE.Color('#050811');
+ const ocam=new THREE.PerspectiveCamera(42,cv.clientWidth/Math.max(1,cv.clientHeight),.1,200);
+ ocam.position.set(0,12,16);ocam.lookAt(0,0,0);
+ osc.add(new THREE.AmbientLight(0xffffff,.5));const dl=new THREE.DirectionalLight(0xffffff,1.2);dl.position.set(10,8,10);osc.add(dl);
+ const earth=planet('earth',1.8);osc.add(earth);
+ const sat=new THREE.Mesh(new THREE.SphereGeometry(.22,14,10),new THREE.MeshBasicMaterial({color:'#5fd3c8'}));osc.add(sat);
+ let oLine=null,ang=0,curM=orbitMetrics(400,0);
+ function updOrbit(){
+  const alt=Number($('oAlt').value),ecc=Number($('oEcc').value);
+  $('oAltV').textContent=fmt(alt);$('oEccV').textContent=ecc.toFixed(2);
+  curM=orbitMetrics(alt,ecc);
+  const type=ecc===0?(alt<2000?'Low Earth Orbit (LEO)':(Math.abs(alt-35786)<400?'Geostationary Orbit (GEO)':'Medium Earth Orbit (MEO)')):'Elliptical Transfer Orbit';
+  $('oStats').innerHTML=
+   '<div class="cmp-kv"><span>Regime</span><b>'+type+'</b></div>'+
+   '<div class="cmp-kv"><span>Velocity (Peri / Apo)</span><b>'+curM.vPeri.toFixed(2)+' / '+curM.vApo.toFixed(2)+' km/s</b></div>'+
+   '<div class="cmp-kv"><span>Orbital Period</span><b>'+(curM.periodMin>=120?(curM.periodMin/60).toFixed(2)+' hrs':curM.periodMin.toFixed(1)+' min')+'</b></div>'+
+   '<div class="cmp-kv"><span>Local Gravity</span><b>'+curM.grav.toFixed(2)+' m/s&sup2;</b></div>'+
+   '<p style="margin-top:8px;font-size:12px">Higher orbits move slower and take longer per orbit, reducing eclipse frequency but requiring more delta-v and stronger antennas.</p>';
+  if(oLine){osc.remove(oLine);oLine.geometry.dispose();}
+  const scaleA=2.4+Math.min(6,curM.aKm/7000),b=scaleA*Math.sqrt(1-ecc*ecc),c=scaleA*ecc,pts=[];
+  for(let i=0;i<=80;i++){const t=i/80*Math.PI*2;pts.push(new THREE.Vector3(scaleA*Math.cos(t)-c,0,b*Math.sin(t)));}
+  oLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:'#5fd3c8'}));osc.add(oLine);
+  curM.scaleA=scaleA;curM.b=b;curM.c=c;
+ }
+ function tick(){
+  if($('modal').hidden){or.dispose();orbitRaf=0;return;}
+  orbitRaf=requestAnimationFrame(tick);
+  const w=cv.clientWidth,h=cv.clientHeight;if(w&&h)or.setSize(w,h,false);
+  ocam.aspect=w/Math.max(1,h);ocam.updateProjectionMatrix();
+  ang+=.018*(100/Math.max(40,curM.periodMin));
+  sat.position.set(curM.scaleA*Math.cos(ang)-curM.c,0,curM.b*Math.sin(ang));
+  earth.rotation.y+=.005;or.render(osc,ocam);
+ }
+ $('oAlt').oninput=updOrbit;$('oEcc').oninput=updOrbit;
+ $('oLeo').onclick=()=>{$('oAlt').value=400;$('oEcc').value=0;updOrbit();};
+ $('oMeo').onclick=()=>{$('oAlt').value=20200;$('oEcc').value=0;updOrbit();};
+ $('oGeo').onclick=()=>{$('oAlt').value=35786;$('oEcc').value=0;updOrbit();};
+ $('oClose').onclick=()=>{if(orbitRaf){cancelAnimationFrame(orbitRaf);orbitRaf=0;}or.dispose();closeModal();};
+ updOrbit();tick();
+}
+
+/* ---- Student Learning Academy, Quiz, Achievements & Certificate ---- */
+const QUIZ=[
+ {q:'Why does adding a heavy scientific instrument reduce your spacecraft\'s delta-v?',opts:['It increases dry mass in the Tsiolkovsky rocket equation','It lowers the Sun\'s gravity','It disables the antenna'],ans:0,why:'Delta-v = Isp * g0 * ln(m0 / m_dry). Higher dry mass lowers the mass ratio m0 / m_dry.'},
+ {q:'At Mars (1.52 AU), how much power does a 1,500 W Solar Wing produce?',opts:['1,500 W','About 649 W (43%)','About 60 W (4%)'],ans:1,why:'Solar intensity follows the inverse-square law (1 / AU^2): 1500 / 1.52^2 ≈ 649 W.'},
+ {q:'What happens to orbital period as orbital altitude increases?',opts:['It stays constant','It decreases','It increases'],ans:2,why:'By Kepler\'s Third Law, T = 2*pi*sqrt(a^3 / mu), so higher orbits have longer periods.'},
+ {q:'Why do spacecraft need Radiators even in freezing space?',opts:['Space is a vacuum, so heat can only leave by radiation','To warm up the fuel tanks','To generate electricity from heat'],ans:0,why:'Without air for convection, electronics and crew waste heat must be radiated away.'},
+ {q:'Which subsystem stores energy for when solar panels pass into a planet\'s shadow?',opts:['Reaction Wheels (ADCS)','Battery Pack','High-gain Dish'],ans:1,why:'Batteries store electrical energy (Wh) to power the spacecraft during eclipses.'}
+];
+const ACH=[
+ {id:'orbit',name:'First Orbit',desc:'Complete any space mission successfully'},
+ {id:'bal',name:'Balanced Engineer',desc:'Achieve 90%+ 4-side spacecraft balance'},
+ {id:'ion',name:'Ion Pioneer',desc:'Complete a mission using an Ion Engine'},
+ {id:'eff',name:'Efficiency Master',desc:'Earn 3 stars on any mission'},
+ {id:'quiz',name:'Academy Scholar',desc:'Score 4/5 or higher on the Knowledge Check'}
+];
+let PROG={ach:{},quizBest:0,missions:0};
+try{const p=JSON.parse(localStorage.getItem('orbitix.prog')||'null');if(p)PROG=p;}catch(e){}
+function saveProg(){try{localStorage.setItem('orbitix.prog',JSON.stringify(PROG));}catch(e){}}
+function unlockAch(id){if(!PROG.ach[id]){PROG.ach[id]=true;saveProg();const a=ACH.find(x=>x.id===id);if(a)toast('Achievement unlocked: '+a.name+'!');}}
+function showAcademy(tab){
+ const t=tab||'path',ev=evaluate(),df=ev.df;
+ const objs={
+  beginner:['Identify command, propellant, engine, and side subsystems','Build a spacecraft that meets basic Lunar Orbiter requirements','Use the "i" button to inspect component trade-offs'],
+  intermediate:['Balance mass across all 4 spacecraft sides','Size Solar Wings, RTGs, and Batteries for eclipse survival','Compare propulsion Isp vs thrust in Mars missions'],
+  advanced:['Optimize dry mass and budget under strict tolerances','Design an outer-planet Europa Explorer with RTGs and High-gain comms','Achieve 3-star mission efficiency and 85%+ balance']
+ }[S.diff];
+ if(t==='quiz'){
+  let score=0,answered={};
+  openModal('<h2>Orbitix Academy</h2><div class="tabs"><button class="tab" id="aP">Learning Path</button><button class="tab on" id="aQ">Knowledge Check</button><button class="tab" id="aA">Achievements</button></div>'+
+   '<p>Best score: <b>'+PROG.quizBest+' / '+QUIZ.length+'</b></p>'+
+   QUIZ.map((q,qi)=>'<div class="quiz-q"><b>'+(qi+1)+'. '+esc(q.q)+'</b><div class="quiz-opts" id="qo'+qi+'">'+
+    q.opts.map((op,oi)=>'<button class="quiz-opt" data-q="'+qi+'" data-o="'+oi+'">'+esc(op)+'</button>').join('')+
+    '</div><small id="qw'+qi+'" style="display:block;margin-top:6px;color:var(--muted)"></small></div>').join('')+
+   '<div class="acts"><button class="btn primary" id="aClose">Close</button></div>');
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.onclick=()=>{
+   const qi=+b.dataset.q,oi=+b.dataset.o;if(answered[qi])return;answered[qi]=true;
+   const ok=oi===QUIZ[qi].ans;b.classList.add(ok?'ok':'no');
+   if(ok)score++;else document.querySelectorAll('#qo'+qi+' .quiz-opt')[QUIZ[qi].ans].classList.add('ok');
+   $('qw'+qi).textContent=(ok?'Correct! ':'Not quite. ')+QUIZ[qi].why;
+   if(score>PROG.quizBest){PROG.quizBest=score;saveProg();}
+   if(score>=4)unlockAch('quiz');
+  });
+ }else if(t==='ach'){
+  openModal('<h2>Orbitix Academy</h2><div class="tabs"><button class="tab" id="aP">Learning Path</button><button class="tab" id="aQ">Knowledge Check</button><button class="tab on" id="aA">Achievements</button></div>'+
+   '<p>Missions completed: <b>'+PROG.missions+'</b> &middot; Achievements: <b>'+Object.keys(PROG.ach).length+' / '+ACH.length+'</b></p>'+
+   '<div class="ach-grid">'+ACH.map(a=>'<div class="ach '+(PROG.ach[a.id]?'on':'')+'"><b>'+(PROG.ach[a.id]?'&#9733; ':'&#9734; ')+esc(a.name)+'</b><br><small>'+esc(a.desc)+'</small></div>').join('')+'</div>'+
+   '<div class="acts"><button class="btn primary" id="aClose">Close</button></div>');
+ }else{
+  openModal('<h2>Orbitix Academy</h2><div class="tabs"><button class="tab on" id="aP">Learning Path</button><button class="tab" id="aQ">Knowledge Check</button><button class="tab" id="aA">Achievements</button></div>'+
+   '<p>Current Level: <b>'+esc(df.label)+'</b> (change level in the top bar)</p>'+
+   '<h3>Learning Objectives ('+esc(df.label)+')</h3><ul>'+objs.map(o=>'<li>'+esc(o)+'</li>').join('')+'</ul>'+
+   '<h3>Current Spacecraft Progress</h3><p>'+ev.checks.filter(c=>c.ok).length+' of '+ev.checks.length+' mission requirements met &middot; Readiness: <b>'+analyzeDesign(ev).readiness+'/100</b></p>'+
+   '<div class="acts"><button class="btn primary" id="aClose">Close</button></div>');
+ }
+ $('aP').onclick=()=>showAcademy('path');$('aQ').onclick=()=>showAcademy('quiz');$('aA').onclick=()=>showAcademy('ach');
+ $('aClose').onclick=closeModal;
+}
+function showCertificate(o){
+ openModal('<div class="cert"><small style="color:var(--warn);letter-spacing:.12em;text-transform:uppercase">Orbitix Spacecraft Engineering Academy</small>'+
+  '<h2 style="margin:8px 0">Mission Completion Certificate</h2>'+
+  '<p>This certifies that the student engineer successfully designed, balanced, and launched a spacecraft for</p>'+
+  '<h3 style="font-size:20px;margin:8px 0">'+esc(o.ev.ms.name)+'</h3>'+
+  '<p>Difficulty: <b>'+esc(o.ev.df.label)+'</b> &middot; Score: <b>'+o.score+' / 100</b> &middot; Rating: <b>'+o.stars+' / 3 &#9733;</b></p>'+
+  '<p style="color:var(--muted);font-size:12px">Date: '+new Date().toLocaleDateString()+'</p></div>'+
+  '<div class="acts"><button class="btn primary" id="cClose">Close</button></div>');
+ $('cClose').onclick=closeModal;
+}
+
+/* ---- Loop and startup ---- */
+function resize(){const r=$('cv').getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();fcam.aspect=w/h;fcam.updateProjectionMatrix();}
+function updateBuild(dt){const L=layout(),H=L.H,ty=Math.max(H,3)/2,asp=cam.aspect,dist=Math.max(10,H*1.35+6,3.4/(.364*asp)+3)*zoom;
+ camY+=(ty-camY)*.08;camD+=(dist-camD)*.08;cam.position.set(0,camY+Math.max(H,3)*.12+1.2,camD);cam.lookAt(0,camY,0);
+ if(S.pop&&index[S.pop]){S.popT+=dt*4;const k=Math.min(1,S.popT),s=1-Math.pow(1-k,3);index[S.pop].scale.setScalar(Math.max(.01,s));if(k>=1)S.pop=null;}
+ if(selBox)selBox.update();stars.rotation.y+=dt*.01;if(ringInd.visible)ringInd.rotation.z+=dt*2;
+ if(hoverId){hoverAng+=dt*1.5;drawPreview(hoverId,hoverAng);}renderer.render(scene,cam);}
+let lastT=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-lastT)/1000);lastT=now;
+ try{if(menuOpen)return;if(mode==='build')updateBuild(dt);else updateFlight(dt);}
+ catch(e){console.error(e);if(mode==='flight'){try{endFlight();}catch(_){mode='build';document.body.classList.remove('flight');}toast('The flight view hit an error, so you are back in the workshop.');}}}
+function init(){
+ $('missionSel').innerHTML=MISSIONS.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
+ $('launchSel').innerHTML=LAUNCHERS.map(l=>'<option value="'+l.id+'">'+esc(l.name)+' ('+fmt(l.cap)+' kg, $'+l.cost+'M)</option>').join('');
+ if(!load())starter();
+ $('missionSel').value=S.mission.id;$('launchSel').value=S.launcher.id;$('diffSel').value=S.diff;
+ $('missionSel').onchange=e=>{S.mission=MISSIONS.find(m=>m.id===e.target.value);lastPartNote='';refresh();};
+ $('launchSel').onchange=e=>{S.launcher=LAUNCHERS.find(l=>l.id===e.target.value);lastPartNote='';refresh();};
+ $('diffSel').onchange=e=>{S.diff=e.target.value;lastPartNote='Switched difficulty to '+DIFF[S.diff].label+'. ';refresh();};
+ $('btnOrbit').onclick=showOrbitLab;$('btnAcademy').onclick=()=>showAcademy('path');
+ $('btnGuide').onclick=showGuide;$('btnReview').onclick=showReview;$('btnCompare').onclick=()=>showCompare();$('btnLaunch').onclick=startFlight;$('btnAbort').onclick=endFlight;
+ $('btnClear').onclick=()=>{S.stack=[];S.selected=null;refresh();};
+ makeCards();new ResizeObserver(resize).observe($('cv'));resize();refresh();
+ try{if(window.claude&&window.claude.use)window.claude.use('sample').then(s=>{SAMPLE=s;}).catch(()=>{});}catch(e){}
+ requestAnimationFrame(loop);}
+
+/* ---- Main menu with Cosmo, the astronaut guide ---- */
+let menuOpen=false,step=0,typing=null,fly=null,nextFly=0,spinT=0,ax=0,ay=0,prevX=0,tilt=0,shoot=null,closeT=0;
+const MENU=$('menu'),AS=$('mastro'),STG=$('mstage'),CAN=$('mstars'),mx=CAN.getContext('2d'),FL=$('aflame'),MO=$('amouth'),BT=$('btext');
+const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const STEPS=[
+{tag:'Welcome',x:.5,y:.45,t:'Welcome aboard, future space engineer! I\'m Cosmo, your flight guide. Every space mission is a balancing puzzle: build a ship that meets your fuel, weight, power, radio range and budget targets—just like real mission engineers do.'},
+{tag:'The workshop',x:.7,y:.6,t:'This is your main workspace. Drag or tap hull and engine parts from the left bin and power, antennas and instruments from the right bin onto the middle platform. Watch the requirement boxes at the top turn green as your ship is ready.',mini:'<div class="mini"><span>Hull &amp; engines</span><b>Your ship</b><span>Systems &amp; instruments</span></div>'},
+{tag:'Ready to launch',x:.5,y:.5,t:'When your ship is ready, hit Launch test to fly it into space—and if you get stuck, ask the AI engineer for hints. Pick your first mission below or jump right in and start building!',final:true}];
+function finishTyping(){if(typing){clearInterval(typing);typing=null;}BT.textContent=STEPS[step].t;}
+function say(i){step=i;const s=STEPS[i];if(typing){clearInterval(typing);typing=null;}
+ $('mtag').textContent=s.tag+' · '+(i+1)+'/'+STEPS.length;$('bsr').textContent=s.t;$('bmini').innerHTML=s.mini||'';
+ $('mdots').innerHTML=STEPS.map((_,k)=>'<i class="'+(k===i?'on':'')+'"></i>').join('');
+ $('mBack').disabled=i===0;$('mNext').hidden=!!s.final;$('mpills').hidden=!s.final;
+ if(reduce){BT.textContent=s.t;return;}
+ let n=0;BT.textContent='';typing=setInterval(()=>{n+=2;BT.textContent=s.t.slice(0,n);if(n%6===2&&/[a-zA-Z0-9]/.test(s.t[n-1]||''))talkBlip();if(n>=s.t.length){clearInterval(typing);typing=null;}},22);}
+/* ---- Sound effects & background music ---- */
+let muted=false,audioUnlocked=false,actx=null,aout=null;
+const SFX={
+ bgm:new Audio('sounds/sound_all_over_the_game.mpeg'),
+ launch:new Audio('sounds/Rocket_Launch.mpeg'),
+ warning:new Audio('sounds/Warning.mpeg'),
+ gameover:new Audio('sounds/Game_over.mpeg'),
+ winning:new Audio('sounds/Winning.mp3')
+};
+SFX.bgm.loop=true;SFX.bgm.volume=.55;
+SFX.launch.volume=1;SFX.warning.volume=1;SFX.gameover.volume=1;SFX.winning.volume=1;
+function getAudioOut(){
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+ if(!actx){
+  actx=new AC();
+  const comp=actx.createDynamicsCompressor();
+  comp.threshold.value=-14;comp.knee.value=12;comp.ratio.value=6;
+  const boost=actx.createGain();boost.gain.value=2.6;
+  boost.connect(comp);comp.connect(actx.destination);
+  aout=boost;
+ }
+ if(actx.state==='suspended')actx.resume().catch(()=>{});
+ return aout;
+}
+function syncBgm(){
+ if(!audioUnlocked)return;
+ if(muted){SFX.bgm.pause();return;}
+ if(SFX.bgm.paused)SFX.bgm.play().catch(()=>{});
+}
+function talkBlip(){
+ if(muted||!audioUnlocked)return;
+ try{
+  const out=getAudioOut();if(!out)return;
+  const now=actx.currentTime,osc=actx.createOscillator(),g=actx.createGain();
+  osc.type='triangle';
+  const f=440+Math.random()*220;
+  osc.frequency.setValueAtTime(f,now);
+  osc.frequency.exponentialRampToValueAtTime(f*1.12,now+.04);
+  g.gain.setValueAtTime(.001,now);
+  g.gain.linearRampToValueAtTime(.14,now+.008);
+  g.gain.exponentialRampToValueAtTime(.001,now+.048);
+  osc.connect(g);g.connect(out);
+  osc.start(now);osc.stop(now+.05);
+ }catch(e){}
+}
+function fireThrust(){
+ if(muted)return;
+ audioUnlocked=true;
+ try{
+  const out=getAudioOut();if(!out)return;
+  const now=actx.currentTime,dur=.9,len=Math.floor(actx.sampleRate*dur);
+  const buf=actx.createBuffer(1,len,actx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,.45);
+  const src=actx.createBufferSource();src.buffer=buf;
+  const flt=actx.createBiquadFilter();flt.type='lowpass';
+  flt.frequency.setValueAtTime(1600,now);flt.frequency.exponentialRampToValueAtTime(260,now+dur);
+  const g=actx.createGain();g.gain.setValueAtTime(.001,now);
+  g.gain.linearRampToValueAtTime(1,now+.04);
+  g.gain.exponentialRampToValueAtTime(.001,now+dur);
+  src.connect(flt);flt.connect(g);g.connect(out);
+  src.start(now);src.stop(now+dur);
+  const sub=actx.createOscillator(),sg=actx.createGain();
+  sub.type='sawtooth';sub.frequency.setValueAtTime(110,now);sub.frequency.exponentialRampToValueAtTime(36,now+dur);
+  sg.gain.setValueAtTime(.001,now);sg.gain.linearRampToValueAtTime(.55,now+.04);sg.gain.exponentialRampToValueAtTime(.001,now+dur);
+  sub.connect(sg);sg.connect(out);sub.start(now);sub.stop(now+dur);
+  const bass=actx.createOscillator(),bg=actx.createGain();
+  bass.type='sine';bass.frequency.setValueAtTime(75,now);bass.frequency.exponentialRampToValueAtTime(28,now+dur);
+  bg.gain.setValueAtTime(.001,now);bg.gain.linearRampToValueAtTime(.45,now+.03);bg.gain.exponentialRampToValueAtTime(.001,now+dur);
+  bass.connect(bg);bg.connect(out);bass.start(now);bass.stop(now+dur);
+ }catch(e){}
+}
+function playSfx(name){
+ if(muted)return;
+ audioUnlocked=true;
+ const a=SFX[name];if(!a)return;
+ try{a.currentTime=0;a.play().catch(()=>{});}catch(e){}
+}
+function unlockAudio(){if(!audioUnlocked){audioUnlocked=true;syncBgm();}}
+window.addEventListener('pointerdown',unlockAudio,{once:true});
+window.addEventListener('keydown',unlockAudio,{once:true});
+$('btnSound').onclick=()=>{muted=!muted;$('btnSound').textContent=muted?'🔇 Muted':'🔊 Sound';audioUnlocked=true;syncBgm();};
+
+function openMenu(){clearTimeout(closeT);menuOpen=true;MENU.hidden=false;MENU.classList.remove('closing');syncBgm();
+ const W=STG.clientWidth,H=STG.clientHeight,sw=AS.offsetWidth,sh=AS.offsetHeight;ax=(W-sw)*.5;ay=(H-sh)*.45;fly=null;nextFly=performance.now()+14000;
+ say(0);requestAnimationFrame(menuLoop);$('mNext').focus();}
+function closeMenu(){if(!menuOpen||MENU.classList.contains('closing'))return;MENU.classList.add('closing');if(typing){clearInterval(typing);typing=null;}
+ closeT=setTimeout(()=>{MENU.hidden=true;menuOpen=false;syncBgm();resize();},reduce?0:350);}
+function pickMission(m){S.mission=m;$('missionSel').value=m.id;refresh();closeMenu();}
+const pills=$('mpills');MISSIONS.forEach(m=>{const b=document.createElement('button');b.className='btn';b.textContent=m.name;b.onclick=()=>pickMission(m);pills.appendChild(b);});
+const st=document.createElement('button');st.className='btn primary';st.textContent='Start building ▶';st.onclick=closeMenu;pills.appendChild(st);
+$('mNext').onclick=()=>{if(typing){finishTyping();return;}if(step<STEPS.length-1){fireThrust();say(step+1);}};
+$('mBack').onclick=()=>{if(step>0)say(step-1);};
+$('mSkip').onclick=closeMenu;$('btnTour').onclick=openMenu;
+AS.addEventListener('click',()=>{if(!reduce)spinT=performance.now();});
+window.addEventListener('keydown',e=>{if(!menuOpen)return;if(e.key==='Escape')closeMenu();else if(e.key==='ArrowRight')$('mNext').click();else if(e.key==='ArrowLeft')$('mBack').click();});
+
+/* starfield and astronaut motion */
+const STARS=Array.from({length:170},()=>({x:Math.random(),y:Math.random(),z:.2+Math.random()*.8,p:Math.random()*6.28}));
+function drawStars(now){const d=Math.min(window.devicePixelRatio||1,2),w=CAN.clientWidth,h=CAN.clientHeight;if(!w)return;
+ if(CAN.width!==Math.round(w*d)||CAN.height!==Math.round(h*d)){CAN.width=Math.round(w*d);CAN.height=Math.round(h*d);}
+ mx.setTransform(d,0,0,d,0,0);mx.clearRect(0,0,w,h);
+ STARS.forEach(s=>{const x=(((s.x-now*(reduce?0:.000012)*s.z)%1)+1)%1*w,a=.35+.65*(.5+.5*Math.sin(now*.002*s.z+s.p));mx.fillStyle='rgba(200,220,255,'+a.toFixed(2)+')';const r=.6+s.z*1.5;mx.fillRect(x,s.y*h,r,r);});
+ if(!reduce){if(!shoot&&Math.random()<.003)shoot={x:w*(.3+Math.random()*.6),y:h*Math.random()*.4,t:0};
+  if(shoot){shoot.t+=1;const k=shoot.t/50,x=shoot.x-k*220,y=shoot.y+k*120;mx.strokeStyle='rgba(255,255,255,'+(1-k).toFixed(2)+')';mx.lineWidth=1.6;mx.beginPath();mx.moveTo(x,y);mx.lineTo(x+60,y-33);mx.stroke();if(k>=1)shoot=null;}}}
+function moveAstro(now){const W=STG.clientWidth,H=STG.clientHeight,sw=AS.offsetWidth,sh=AS.offsetHeight;if(!W||!sw)return;
+ const s=STEPS[step],tx=(W-sw)*s.x,ty=(H-sh)*s.y;ax+=(tx-ax)*.035;ay+=(ty-ay)*.035;
+ const amp=reduce?.2:1;let x=ax+Math.sin(now*.0007)*W*.05*amp,y=ay+Math.cos(now*.0009)*H*.04*amp,rot=Math.sin(now*.0011)*7*amp,boost=0;
+ if(!reduce&&!fly&&!typing&&now>nextFly)fly={t0:now};
+ if(fly){const u=(now-fly.t0)/5200,left=STG.getBoundingClientRect().left,far=window.innerWidth-left+sw,near=-left-sw*1.5;boost=1.2;
+  if(u>=1){fly=null;nextFly=now+16000;}
+  else if(u<.45){const k=u/.45;x=ax+(far-ax)*k*k;y=ay-k*H*.25;rot=70+k*10;}
+  else{const k=(u-.45)/.55,e=1-Math.pow(1-k,3);x=near+(ax-near)*e;y=ay+(1-e)*H*.2;rot=(1-e)*70;}}
+ const vx=x-prevX;prevX=x;tilt+=(Math.max(-18,Math.min(18,vx*3))-tilt)*.1;if(!fly)rot+=tilt;
+ if(spinT){const u=(now-spinT)/900;if(u>=1)spinT=0;else rot+=360*(1-Math.pow(1-u,3));}
+ AS.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) rotate('+rot.toFixed(1)+'deg)';
+ const f=.8+.22*Math.sin(now*.03)+Math.min(1,Math.abs(vx)*.25)+boost;FL.setAttribute('transform','translate(100 204) scale(1 '+f.toFixed(2)+') translate(-100 -204)');
+ MO.setAttribute('ry',typing?(1.5+Math.abs(Math.sin(now*.025))*4).toFixed(1):'2.5');}
+function menuLoop(now){if(!menuOpen)return;requestAnimationFrame(menuLoop);try{drawStars(now);moveAstro(now);}catch(e){console.error(e);}}
+
+init();
+$('btnTour').title='Replay the guided tour';
+openMenu();
+})();
+</script>
